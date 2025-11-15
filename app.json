@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Todoist Clone",
+    "slug": "todoist-clone",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "todoist-clone",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1f1f1f"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.todoist.clone"
+    },
+    "android": {
+      "package": "com.todoist.clone"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
