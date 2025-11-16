@@ -134,11 +134,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress }) =
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
-    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.backgroundSecondary,
+    paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    marginHorizontal: theme.spacing.md,
+    marginVertical: theme.spacing.xs,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
   },
   content: {
     flexDirection: 'row',
@@ -169,6 +172,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: theme.typography.fontSize.md,
+    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text,
     flex: 1,
   },

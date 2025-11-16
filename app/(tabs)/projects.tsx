@@ -7,6 +7,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DraggableFlatList, {
   ScaleDecorator,
@@ -19,6 +20,7 @@ import { mockProjects, mockTasks } from '../../src/data/mockData';
 import { theme } from '../../src/theme';
 
 export default function ProjectsScreen() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>(
     mockProjects.filter(p => !p.isArchived && p.id !== 'inbox').sort((a, b) => a.order - b.order)
   );
@@ -28,16 +30,7 @@ export default function ProjectsScreen() {
   };
 
   const handleProjectPress = (project: Project) => {
-    const taskCount = getTaskCount(project.id);
-    const sections = project.sections.length > 0
-      ? `\n\nSections: ${project.sections.map(s => s.name).join(', ')}`
-      : '';
-
-    Alert.alert(
-      project.name,
-      `Tasks: ${taskCount}${sections}`,
-      [{ text: 'OK' }]
-    );
+    router.push(`/project/${project.id}`);
   };
 
   const renderProject = ({ item, drag, isActive }: RenderItemParams<Project>) => {
@@ -128,7 +121,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
@@ -139,16 +133,18 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingBottom: theme.spacing.xxl,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.textSecondary,
+    color: theme.colors.text,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    backgroundColor: theme.colors.backgroundSecondary,
+    paddingTop: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   dragging: {
     opacity: 0.7,

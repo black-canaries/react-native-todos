@@ -28,7 +28,7 @@ export default function TabLayout() {
         options={{
           title: 'Inbox',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="inbox" size={size} color={color} />
+            <Ionicons name="mail" size={size} color={color} />
           ),
         }}
       />

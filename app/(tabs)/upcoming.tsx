@@ -90,6 +90,7 @@ export default function UpcomingScreen() {
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <TaskItem
             task={item}
@@ -127,12 +128,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  listContent: {
+    paddingBottom: theme.spacing.xxl,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
@@ -145,27 +150,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: theme.colors.background,
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingTop: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   sectionCount: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.md,
+    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textSecondary,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: theme.spacing.xxl * 2,
+    paddingHorizontal: theme.spacing.md,
   },
   emptyText: {
     fontSize: theme.typography.fontSize.xl,

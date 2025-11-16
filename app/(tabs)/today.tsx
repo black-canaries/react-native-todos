@@ -146,6 +146,7 @@ export default function TodayScreen() {
           setTasks(data);
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }}
+        contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons
@@ -186,12 +187,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  listContent: {
+    paddingBottom: theme.spacing.xxl,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
@@ -208,26 +213,31 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     padding: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: theme.colors.background,
+    gap: theme.spacing.sm,
   },
   input: {
     flex: 1,
-    backgroundColor: theme.colors.input,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     fontSize: theme.typography.fontSize.md,
     color: theme.colors.text,
-    marginRight: theme.spacing.sm,
+    minHeight: 44,
   },
   addButton: {
     backgroundColor: theme.colors.primary,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.lg,
     justifyContent: 'center',
+    minHeight: 44,
   },
   addButtonText: {
     color: '#ffffff',
@@ -241,6 +251,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: theme.spacing.xxl * 2,
+    paddingHorizontal: theme.spacing.md,
   },
   emptyText: {
     fontSize: theme.typography.fontSize.xl,
@@ -255,15 +266,18 @@ const styles = StyleSheet.create({
   },
   completedSection: {
     marginTop: theme.spacing.lg,
+    marginHorizontal: theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing.md,
   },
   completedHeader: {
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textSecondary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    paddingHorizontal: 0,
+    paddingVertical: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

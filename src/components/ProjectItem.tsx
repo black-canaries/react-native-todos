@@ -42,11 +42,16 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
-    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.backgroundSecondary,
+    paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    marginHorizontal: theme.spacing.md,
+    marginVertical: theme.spacing.xs,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    minHeight: 52,
+    justifyContent: 'center',
   },
   content: {
     flexDirection: 'row',
@@ -65,11 +70,13 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: theme.typography.fontSize.md,
+    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text,
     flex: 1,
   },
   count: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.md,
+    fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textSecondary,
     marginLeft: theme.spacing.sm,
   },

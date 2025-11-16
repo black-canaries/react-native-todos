@@ -42,7 +42,7 @@ export const mockProjects: Project[] = [
     id: 'inbox',
     name: 'Inbox',
     color: '#4073ff',
-    icon: 'inbox',
+    icon: 'mail',
     isFavorite: true,
     isArchived: false,
     order: 0,
