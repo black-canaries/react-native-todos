@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,13 +36,13 @@ export default function ProjectDetailScreen() {
 
   if (!project) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
+      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+        <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={28} color={theme.colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Project Not Found</Text>
-          <View style={{ width: 28 }} />
+          <Text className="text-xxl font-bold text-text">Project Not Found</Text>
+          <View className="w-7" />
         </View>
       </SafeAreaView>
     );
@@ -77,7 +77,7 @@ export default function ProjectDetailScreen() {
             drag();
           }}
           disabled={isActive}
-          style={[isActive && styles.dragging]}
+          className={isActive ? 'opacity-70' : ''}
         >
           <TaskItem
             task={item}
@@ -90,27 +90,25 @@ export default function ProjectDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color={theme.colors.text} />
         </TouchableOpacity>
-        <View style={styles.headerContent}>
+        <View className="flex-1 flex-row items-center justify-center">
           <View
-            style={[
-              styles.projectColor,
-              { backgroundColor: project.color },
-            ]}
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: project.color }}
           />
-          <Text style={styles.headerTitle}>{project.name}</Text>
+          <Text className="text-xxl font-bold text-text ml-sm">{project.name}</Text>
         </View>
-        <View style={{ width: 28 }} />
+        <View className="w-7" />
       </View>
 
-      <View style={styles.content}>
+      <View className="flex-1 pb-xxl">
         {tasks.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Active Tasks</Text>
+            <Text className="text-lg font-semibold text-text px-md py-md pt-lg bg-background border-b border-border">Active Tasks</Text>
             <DraggableFlatList
               data={tasks}
               renderItem={renderTask}
@@ -126,7 +124,7 @@ export default function ProjectDetailScreen() {
 
         {completedTasks.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Completed</Text>
+            <Text className="text-lg font-semibold text-text px-md py-md pt-lg bg-background border-b border-border">Completed</Text>
             <View>
               {completedTasks.map((task) => (
                 <TaskItem
@@ -141,78 +139,16 @@ export default function ProjectDetailScreen() {
         )}
 
         {tasks.length === 0 && completedTasks.length === 0 && (
-          <View style={styles.emptyState}>
+          <View className="flex-1 justify-center items-center">
             <Ionicons
               name="checkbox-outline"
               size={48}
               color={theme.colors.textSecondary}
             />
-            <Text style={styles.emptyStateText}>No tasks in this project</Text>
+            <Text className="text-md text-text-secondary mt-md">No tasks in this project</Text>
           </View>
         )}
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  headerContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
-    marginLeft: theme.spacing.sm,
-  },
-  projectColor: {
-    width: 12,
-    height: 12,
-    borderRadius: theme.borderRadius.full,
-  },
-  content: {
-    flex: 1,
-    paddingBottom: theme.spacing.xxl,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    paddingTop: theme.spacing.lg,
-    backgroundColor: theme.colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  dragging: {
-    opacity: 0.7,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyStateText: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-});

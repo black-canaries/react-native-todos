@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
   TextInput,
@@ -85,7 +84,7 @@ export default function InboxScreen() {
             drag();
           }}
           disabled={isActive}
-          style={[isActive && styles.dragging]}
+          className={isActive ? 'opacity-70' : ''}
         >
           <TaskItem
             task={item}
@@ -98,9 +97,9 @@ export default function InboxScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Inbox</Text>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
+        <Text className="text-xxl font-bold text-text">Inbox</Text>
         <TouchableOpacity onPress={() => setShowInput(!showInput)}>
           <Ionicons
             name={showInput ? 'close' : 'add'}
@@ -111,9 +110,9 @@ export default function InboxScreen() {
       </View>
 
       {showInput && (
-        <View style={styles.inputContainer}>
+        <View className="flex-row px-md py-md border-b border-border bg-background gap-sm">
           <TextInput
-            style={styles.input}
+            className="flex-1 bg-background-secondary border border-border rounded-md px-md py-sm text-md text-text min-h-[44px]"
             placeholder="Task name"
             placeholderTextColor={theme.colors.textTertiary}
             value={newTaskTitle}
@@ -121,8 +120,8 @@ export default function InboxScreen() {
             onSubmitEditing={handleAddTask}
             autoFocus
           />
-          <TouchableOpacity onPress={handleAddTask} style={styles.addButton}>
-            <Text style={styles.addButtonText}>Add</Text>
+          <TouchableOpacity onPress={handleAddTask} className="bg-primary px-lg py-sm rounded-lg justify-center min-h-[44px]">
+            <Text className="text-white text-md font-semibold">Add</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -135,24 +134,24 @@ export default function InboxScreen() {
           setTasks(data);
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingBottom: 96 }}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+          <View className="items-center justify-center py-xxl px-md">
             <Ionicons
               name="checkmark-circle-outline"
               size={64}
               color={theme.colors.textTertiary}
             />
-            <Text style={styles.emptyText}>All done!</Text>
-            <Text style={styles.emptySubtext}>
+            <Text className="text-xl font-semibold text-text-secondary mt-md">All done!</Text>
+            <Text className="text-md text-text-tertiary mt-sm">
               Tap + to add a new task
             </Text>
           </View>
         }
         ListFooterComponent={
           completedTasks.length > 0 ? (
-            <View style={styles.completedSection}>
-              <Text style={styles.completedHeader}>
+            <View className="mt-lg mx-md border-t border-border pt-md">
+              <Text className="text-sm font-semibold text-text-secondary py-sm mb-sm uppercase tracking-widest">
                 Completed ({completedTasks.length})
               </Text>
               {completedTasks.map(task => (
@@ -170,99 +169,3 @@ export default function InboxScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  listContent: {
-    paddingBottom: theme.spacing.xxl,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
-    gap: theme.spacing.sm,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: theme.colors.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.text,
-    minHeight: 44,
-  },
-  addButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
-    justifyContent: 'center',
-    minHeight: 44,
-  },
-  addButtonText: {
-    color: '#ffffff',
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-  },
-  dragging: {
-    opacity: 0.7,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.xxl * 2,
-    paddingHorizontal: theme.spacing.md,
-  },
-  emptyText: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-  emptySubtext: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.textTertiary,
-    marginTop: theme.spacing.sm,
-  },
-  completedSection: {
-    marginTop: theme.spacing.lg,
-    marginHorizontal: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    paddingTop: theme.spacing.md,
-  },
-  completedHeader: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.textSecondary,
-    paddingHorizontal: 0,
-    paddingVertical: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-});

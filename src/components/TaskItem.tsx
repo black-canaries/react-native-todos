@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Task } from '../types';
 import { theme } from '../theme';
@@ -33,16 +33,15 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress }) =
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      className="bg-background-secondary px-md py-sm mx-md my-xs border border-border rounded-md"
       onPress={() => onPress(task)}
       activeOpacity={0.7}
     >
-      <View style={styles.content}>
+      <View className="flex-row items-start">
         <TouchableOpacity
-          style={[
-            styles.checkbox,
-            task.completed && styles.checkboxCompleted,
-          ]}
+          className={`w-6 h-6 rounded-full border-2 border-text-secondary items-center justify-center mr-md mt-[2px] ${
+            task.completed ? 'bg-success border-success' : ''
+          }`}
           onPress={() => onToggle(task.id)}
         >
           {task.completed && (
@@ -50,13 +49,12 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress }) =
           )}
         </TouchableOpacity>
 
-        <View style={styles.textContainer}>
-          <View style={styles.titleRow}>
+        <View className="flex-1">
+          <View className="flex-row items-center mb-xs">
             <Text
-              style={[
-                styles.title,
-                task.completed && styles.titleCompleted,
-              ]}
+              className={`text-md font-semibold text-text flex-1 ${
+                task.completed ? 'line-through text-text-secondary' : ''
+              }`}
               numberOfLines={2}
             >
               {task.title}
@@ -66,63 +64,63 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress }) =
                 name="flag"
                 size={16}
                 color={getPriorityColor(task.priority)}
-                style={styles.priorityFlag}
+                className="ml-sm"
               />
             )}
           </View>
 
           {task.description && (
-            <Text style={styles.description} numberOfLines={1}>
+            <Text className="text-sm text-text-secondary mb-xs" numberOfLines={1}>
               {task.description}
             </Text>
           )}
 
-          <View style={styles.metaRow}>
+          <View className="flex-row flex-wrap mt-xs">
             {task.dueDate && (
-              <View style={styles.metaItem}>
+              <View className="flex-row items-center mr-md mt-xs">
                 <Ionicons
                   name="calendar-outline"
                   size={14}
                   color={dueDateColor}
                 />
-                <Text style={[styles.metaText, { color: dueDateColor }]}>
+                <Text className="text-xs text-text-secondary ml-[4px]">
                   {formatDueDate(task.dueDate)}
                 </Text>
               </View>
             )}
 
             {task.labels.length > 0 && (
-              <View style={styles.metaItem}>
+              <View className="flex-row items-center mr-md mt-xs">
                 <Ionicons
                   name="pricetag-outline"
                   size={14}
                   color={theme.colors.textSecondary}
                 />
-                <Text style={styles.metaText}>{task.labels.length}</Text>
+                <Text className="text-xs text-text-secondary ml-[4px]">{task.labels.length}</Text>
               </View>
             )}
 
             {task.subtasks.length > 0 && (
-              <View style={styles.metaItem}>
+              <View className="flex-row items-center mr-md mt-xs">
                 <Ionicons
                   name="list-outline"
                   size={14}
                   color={theme.colors.textSecondary}
                 />
-                <Text style={styles.metaText}>
+                <Text className="text-xs text-text-secondary ml-[4px]">
                   {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
                 </Text>
               </View>
             )}
 
             {task.comments.length > 0 && (
-              <View style={styles.metaItem}>
+              <View className="flex-row items-center mr-md mt-xs">
                 <Ionicons
                   name="chatbubble-outline"
                   size={14}
                   color={theme.colors.textSecondary}
                 />
-                <Text style={styles.metaText}>{task.comments.length}</Text>
+                <Text className="text-xs text-text-secondary ml-[4px]">{task.comments.length}</Text>
               </View>
             )}
           </View>
@@ -131,77 +129,3 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress }) =
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.backgroundSecondary,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    marginHorizontal: theme.spacing.md,
-    marginVertical: theme.spacing.xs,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 2,
-    borderColor: theme.colors.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.md,
-    marginTop: 2,
-  },
-  checkboxCompleted: {
-    backgroundColor: theme.colors.success,
-    borderColor: theme.colors.success,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  title: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-    flex: 1,
-  },
-  titleCompleted: {
-    textDecorationLine: 'line-through',
-    color: theme.colors.textSecondary,
-  },
-  priorityFlag: {
-    marginLeft: theme.spacing.sm,
-  },
-  description: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: theme.spacing.xs,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: theme.spacing.md,
-    marginTop: theme.spacing.xs,
-  },
-  metaText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.textSecondary,
-    marginLeft: 4,
-  },
-});

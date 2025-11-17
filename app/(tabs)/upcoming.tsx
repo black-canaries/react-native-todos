@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   SectionList,
   Alert,
 } from 'react-native';
@@ -82,15 +81,15 @@ export default function UpcomingScreen() {
   const sections = groupTasksByDate();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Upcoming</Text>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
+        <Text className="text-xxl font-bold text-text">Upcoming</Text>
       </View>
 
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingBottom: 96 }}
         renderItem={({ item }) => (
           <TaskItem
             task={item}
@@ -99,21 +98,21 @@ export default function UpcomingScreen() {
           />
         )}
         renderSectionHeader={({ section: { title, data } }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-            <Text style={styles.sectionCount}>{data.length}</Text>
+          <View className="flex-row justify-between items-center bg-background px-md py-md pt-lg border-b border-border">
+            <Text className="text-lg font-semibold text-text">{title}</Text>
+            <Text className="text-md font-semibold text-text-secondary">{data.length}</Text>
           </View>
         )}
         stickySectionHeadersEnabled
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+          <View className="items-center justify-center py-xxl px-md">
             <Ionicons
               name="calendar-outline"
               size={64}
               color={theme.colors.textTertiary}
             />
-            <Text style={styles.emptyText}>No upcoming tasks</Text>
-            <Text style={styles.emptySubtext}>
+            <Text className="text-xl font-semibold text-text-secondary mt-md">No upcoming tasks</Text>
+            <Text className="text-md text-text-tertiary mt-sm">
               You're all caught up!
             </Text>
           </View>
@@ -122,66 +121,3 @@ export default function UpcomingScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  listContent: {
-    paddingBottom: theme.spacing.xxl,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    paddingTop: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-  },
-  sectionCount: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.textSecondary,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.xxl * 2,
-    paddingHorizontal: theme.spacing.md,
-  },
-  emptyText: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-  emptySubtext: {
-    fontSize: theme.typography.fontSize.md,
-    color: theme.colors.textTertiary,
-    marginTop: theme.spacing.sm,
-  },
-});

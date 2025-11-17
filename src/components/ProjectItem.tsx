@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Project } from '../types';
 import { theme } from '../theme';
@@ -17,70 +17,30 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({
 }) => {
   return (
     <TouchableOpacity
-      style={styles.container}
+      className="bg-background-secondary py-sm px-md mx-md my-xs border border-border rounded-md min-h-[52px] justify-center"
       onPress={() => onPress(project)}
       activeOpacity={0.7}
     >
-      <View style={styles.content}>
-        <View style={[styles.colorDot, { backgroundColor: project.color }]} />
-        <View style={styles.textContainer}>
-          <Text style={styles.name}>{project.name}</Text>
-          {taskCount > 0 && <Text style={styles.count}>{taskCount}</Text>}
+      <View className="flex-row items-center">
+        <View
+          className="w-3 h-3 rounded-full mr-md"
+          style={{ backgroundColor: project.color }}
+        />
+        <View className="flex-1 flex-row items-center">
+          <Text className="text-md font-semibold text-text flex-1">{project.name}</Text>
+          {taskCount > 0 && (
+            <Text className="text-md font-semibold text-text-secondary ml-sm">{taskCount}</Text>
+          )}
         </View>
         {project.isFavorite && (
           <Ionicons
             name="star"
             size={16}
             color={theme.colors.warning}
-            style={styles.favoriteIcon}
+            className="ml-sm"
           />
         )}
       </View>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.backgroundSecondary,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    marginHorizontal: theme.spacing.md,
-    marginVertical: theme.spacing.xs,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    minHeight: 52,
-    justifyContent: 'center',
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: theme.borderRadius.full,
-    marginRight: theme.spacing.md,
-  },
-  textContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  name: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-    flex: 1,
-  },
-  count: {
-    fontSize: theme.typography.fontSize.md,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.textSecondary,
-    marginLeft: theme.spacing.sm,
-  },
-  favoriteIcon: {
-    marginLeft: theme.spacing.sm,
-  },
-});

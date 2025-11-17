@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Alert,
 } from 'react-native';
@@ -42,7 +41,7 @@ export default function ProjectsScreen() {
             drag();
           }}
           disabled={isActive}
-          style={[isActive && styles.dragging]}
+          className={isActive ? 'opacity-70' : ''}
         >
           <ProjectItem
             project={item}
@@ -58,9 +57,9 @@ export default function ProjectsScreen() {
   const otherProjects = projects.filter(p => !p.isFavorite);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Projects</Text>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
+        <Text className="text-xxl font-bold text-text">Projects</Text>
         <TouchableOpacity onPress={() => Alert.alert('Add Project', 'This feature is coming soon!')}>
           <Ionicons
             name="add"
@@ -70,10 +69,10 @@ export default function ProjectsScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
+      <View className="flex-1 pb-xxl">
         {favoriteProjects.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Favorites</Text>
+            <Text className="text-lg font-semibold text-text px-md py-md pt-lg bg-background border-b border-border">Favorites</Text>
             <DraggableFlatList
               data={favoriteProjects}
               renderItem={renderProject}
@@ -90,7 +89,7 @@ export default function ProjectsScreen() {
 
         {otherProjects.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>
+            <Text className="text-lg font-semibold text-text px-md py-md pt-lg bg-background border-b border-border">
               {favoriteProjects.length > 0 ? 'Other Projects' : 'All Projects'}
             </Text>
             <DraggableFlatList
@@ -110,43 +109,3 @@ export default function ProjectsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  headerTitle: {
-    fontSize: theme.typography.fontSize.xxl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text,
-  },
-  content: {
-    flex: 1,
-    paddingBottom: theme.spacing.xxl,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    paddingTop: theme.spacing.lg,
-    backgroundColor: theme.colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  dragging: {
-    opacity: 0.7,
-  },
-});
