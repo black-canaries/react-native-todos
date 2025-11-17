@@ -6,7 +6,9 @@
       "Bash(pkill:*)",
       "Bash(pnpm tsc:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(timeout 20 pnpm start)",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []
