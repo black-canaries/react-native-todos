@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkill -f \"expo\\|pnpm\")",
+      "Bash(pnpm start)",
+      "Bash(pkill:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

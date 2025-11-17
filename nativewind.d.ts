@@ -33,3 +33,8 @@ declare module 'react-native-safe-area-context' {
     className?: string;
   }
 }
+
+declare module 'nativewind/babel' {
+  const plugin: any;
+  export default plugin;
+}
