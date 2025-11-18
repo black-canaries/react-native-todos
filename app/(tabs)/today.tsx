@@ -15,6 +15,7 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import * as Haptics from 'expo-haptics';
 import { TaskItem } from '../../src/components/TaskItem';
+import { EditTaskModal } from '../../src/components/EditTaskModal';
 import { Task } from '../../src/types';
 import { useTodayTasks, useTaskMutations, useAllProjects } from '../../src/hooks';
 import { convexTaskToTask, convexTasksToTasks, taskPriorityToConvex } from '../../src/utils/convexAdapter';
@@ -45,6 +46,7 @@ export default function TodayScreen() {
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showInput, setShowInput] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Get the inbox project ID (fallback to first project if not found)
   const inboxProject = useMemo(() => {
@@ -109,11 +111,7 @@ export default function TodayScreen() {
   };
 
   const handleTaskPress = (task: Task) => {
-    Alert.alert(
-      task.title,
-      task.description || 'No description',
-      [{ text: 'OK' }]
-    );
+    setEditingTask(task);
   };
 
   const handleTaskDelete = async (taskId: string) => {
@@ -240,6 +238,12 @@ export default function TodayScreen() {
             </View>
           ) : null
         }
+      />
+
+      <EditTaskModal
+        visible={!!editingTask}
+        task={editingTask}
+        onClose={() => setEditingTask(null)}
       />
     </SafeAreaView>
   );

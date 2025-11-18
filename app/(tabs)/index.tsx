@@ -16,6 +16,7 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import * as Haptics from 'expo-haptics';
 import { TaskItem } from '../../src/components/TaskItem';
+import { EditTaskModal } from '../../src/components/EditTaskModal';
 import { Task } from '../../src/types';
 import { useAllTasks, useTaskMutations, useAllProjects } from '../../src/hooks';
 import { convexTaskToTask, convexTasksToTasks } from '../../src/utils/convexAdapter';
@@ -28,6 +29,7 @@ export default function InboxScreen() {
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showInput, setShowInput] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Helper to bulk reorder tasks after drag & drop
   const handleTaskReorder = async (reorderedTasks: Task[]) => {
@@ -110,11 +112,7 @@ export default function InboxScreen() {
   };
 
   const handleTaskPress = (task: Task) => {
-    Alert.alert(
-      task.title,
-      task.description || 'No description',
-      [{ text: 'OK' }]
-    );
+    setEditingTask(task);
   };
 
   const handleTaskDelete = async (taskId: string) => {
@@ -164,7 +162,7 @@ export default function InboxScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
+      <View className="flex-row justify-between items-center px-md py-sm">
         <Text className="text-xxl font-bold text-text">Inbox</Text>
         <TouchableOpacity onPress={() => setShowInput(!showInput)}>
           <Ionicons
@@ -231,6 +229,12 @@ export default function InboxScreen() {
             </View>
           ) : null
         }
+      />
+
+      <EditTaskModal
+        visible={!!editingTask}
+        task={editingTask}
+        onClose={() => setEditingTask(null)}
       />
     </SafeAreaView>
   );

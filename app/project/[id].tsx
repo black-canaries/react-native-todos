@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import * as Haptics from 'expo-haptics';
 import { TaskItem } from '../../src/components/TaskItem';
+import { EditTaskModal } from '../../src/components/EditTaskModal';
 import { Task } from '../../src/types';
 import { useProject, useProjectTasks, useTaskMutations } from '../../src/hooks';
 import { convexTasksToTasks } from '../../src/utils/convexAdapter';
@@ -20,7 +21,9 @@ export default function ProjectDetailScreen() {
 
   const projectData = useProject(id);
   const allTasksData = useProjectTasks(id);
-  const { toggleComplete, deleteTask } = useTaskMutations();
+  const { toggleComplete, deleteTask, bulkReorderTasks } = useTaskMutations();
+
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Convert Convex data to legacy format
   const { activeTasks, completedTasks } = useMemo(() => {
@@ -58,11 +61,7 @@ export default function ProjectDetailScreen() {
   };
 
   const handleTaskPress = (task: Task) => {
-    Alert.alert(
-      task.title,
-      task.description || 'No description',
-      [{ text: 'OK' }]
-    );
+    setEditingTask(task);
   };
 
   const handleTaskDelete = async (taskId: string) => {
@@ -77,6 +76,23 @@ export default function ProjectDetailScreen() {
     } catch (error) {
       console.error('Failed to delete task:', error);
       Alert.alert('Error', 'Failed to delete task');
+    }
+  };
+
+  const handleTaskReorder = async (reorderedTasks: Task[]) => {
+    try {
+      const convexTasks = reorderedTasks
+        .map((task, index) => ({
+          id: getConvexTaskId(task.id),
+          newOrder: index,
+        }))
+        .filter((t): t is { id: any; newOrder: number } => t.id !== null);
+
+      if (convexTasks.length > 0) {
+        await bulkReorderTasks({ tasks: convexTasks as any });
+      }
+    } catch (error) {
+      console.error('Failed to reorder tasks:', error);
     }
   };
 
@@ -151,7 +167,7 @@ export default function ProjectDetailScreen() {
               keyExtractor={(item) => item.id}
               onDragEnd={({ data }) => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                // Tasks are automatically reordered in Convex via subscriptions
+                handleTaskReorder(data);
               }}
               scrollEnabled={false}
             />
@@ -185,6 +201,12 @@ export default function ProjectDetailScreen() {
           </View>
         )}
       </View>
+
+      <EditTaskModal
+        visible={!!editingTask}
+        task={editingTask}
+        onClose={() => setEditingTask(null)}
+      />
     </SafeAreaView>
   );
 }
