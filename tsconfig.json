@@ -8,10 +8,9 @@
     "esModuleInterop": true,
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
     }
   },
