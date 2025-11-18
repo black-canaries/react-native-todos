@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
   SectionList,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { TaskItem } from '../../src/components/TaskItem';
 import { Task } from '../../src/types';
-import { mockTasks } from '../../src/data/mockData';
-import { getUpcomingTasks, formatDueDate, isToday, isTomorrow } from '../../src/utils/dateUtils';
+import { useUpcomingTasks, useTaskMutations } from '../../src/hooks';
+import { convexTasksToTasks } from '../../src/utils/convexAdapter';
+import { formatDueDate, isToday, isTomorrow } from '../../src/utils/dateUtils';
 import { theme } from '../../src/theme';
 
 interface TaskSection {
@@ -20,16 +22,35 @@ interface TaskSection {
 }
 
 export default function UpcomingScreen() {
-  const [tasks, setTasks] = useState<Task[]>(
-    getUpcomingTasks(mockTasks).filter(t => !t.completed)
-  );
+  const upcomingTasksData = useUpcomingTasks();
+  const { toggleComplete } = useTaskMutations();
 
-  const handleToggleTask = (taskId: string) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    );
-    setTasks(updatedTasks.filter(t => !t.completed));
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const tasks = useMemo(() => {
+    if (!upcomingTasksData) return [];
+    const converted = convexTasksToTasks(upcomingTasksData);
+    return converted.filter(t => !t.completed);
+  }, [upcomingTasksData]);
+
+  // Find original Convex task by converted ID to get the actual Convex ID
+  const getConvexTaskId = (taskId: string) => {
+    if (!upcomingTasksData) return null;
+    const convexTask = upcomingTasksData.find(t => t._id === taskId);
+    return convexTask?._id || null;
+  };
+
+  const handleToggleTask = async (taskId: string) => {
+    try {
+      const convexId = getConvexTaskId(taskId);
+      if (!convexId) {
+        Alert.alert('Error', 'Task not found');
+        return;
+      }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await toggleComplete({ id: convexId });
+    } catch (error) {
+      console.error('Failed to toggle task:', error);
+      Alert.alert('Error', 'Failed to update task');
+    }
   };
 
   const handleTaskPress = (task: Task) => {
@@ -45,7 +66,11 @@ export default function UpcomingScreen() {
 
     tasks.forEach(task => {
       if (task.dueDate) {
-        const dateKey = task.dueDate.split('T')[0];
+        // Handle both ISO string and numeric timestamps
+        const dateStr = typeof task.dueDate === 'string'
+          ? task.dueDate
+          : new Date(task.dueDate).toISOString();
+        const dateKey = dateStr.split('T')[0];
         if (!grouped[dateKey]) {
           grouped[dateKey] = [];
         }
@@ -79,6 +104,15 @@ export default function UpcomingScreen() {
   };
 
   const sections = groupTasksByDate();
+
+  // Show loading state while data is being fetched
+  if (upcomingTasksData === undefined) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top']}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>

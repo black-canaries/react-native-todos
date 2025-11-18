@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,56 +16,95 @@ import DraggableFlatList, {
 import * as Haptics from 'expo-haptics';
 import { TaskItem } from '../../src/components/TaskItem';
 import { Task } from '../../src/types';
-import { mockTasks } from '../../src/data/mockData';
-import { getTodayTasks } from '../../src/utils/dateUtils';
+import { useTodayTasks, useTaskMutations, useAllProjects } from '../../src/hooks';
+import { convexTaskToTask, convexTasksToTasks, taskPriorityToConvex } from '../../src/utils/convexAdapter';
 import { theme } from '../../src/theme';
 
 export default function TodayScreen() {
-  const [tasks, setTasks] = useState<Task[]>(
-    getTodayTasks(mockTasks).filter(t => !t.completed)
-  );
-  const [completedTasks, setCompletedTasks] = useState<Task[]>(
-    getTodayTasks(mockTasks).filter(t => t.completed)
-  );
+  const todayTasksData = useTodayTasks();
+  const { toggleComplete, createTask, deleteTask, bulkReorderTasks } = useTaskMutations();
+
+  // Helper to bulk reorder tasks after drag & drop
+  const handleTaskReorder = async (reorderedTasks: Task[]) => {
+    try {
+      const convexTasks = reorderedTasks
+        .map((task, index) => ({
+          id: getConvexTaskId(task.id),
+          newOrder: index,
+        }))
+        .filter((t): t is { id: any; newOrder: number } => t.id !== null);
+
+      if (convexTasks.length > 0) {
+        await bulkReorderTasks({ tasks: convexTasks as any });
+      }
+    } catch (error) {
+      console.error('Failed to reorder tasks:', error);
+    }
+  };
+  const projectsData = useAllProjects();
+
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [showInput, setShowInput] = useState(false);
 
-  const handleToggleTask = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setTasks(tasks.filter(t => t.id !== taskId));
-      setCompletedTasks([{ ...task, completed: true }, ...completedTasks]);
-    } else {
-      const completedTask = completedTasks.find(t => t.id === taskId);
-      if (completedTask) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        setCompletedTasks(completedTasks.filter(t => t.id !== taskId));
-        setTasks([...tasks, { ...completedTask, completed: false }]);
+  // Get the inbox project ID (fallback to first project if not found)
+  const inboxProject = useMemo(() => {
+    if (!projectsData || projectsData.length === 0) return null;
+    return projectsData[0]; // First project or could filter by name
+  }, [projectsData]);
+
+  // Separate active and completed tasks
+  const { activeTasks, completedTasks } = useMemo(() => {
+    if (!todayTasksData) {
+      return { activeTasks: [], completedTasks: [] };
+    }
+
+    const convertedTasks = convexTasksToTasks(todayTasksData);
+    return {
+      activeTasks: convertedTasks.filter(t => !t.completed),
+      completedTasks: convertedTasks.filter(t => t.completed),
+    };
+  }, [todayTasksData]);
+
+  // Find original Convex task by converted ID to get the actual Convex ID
+  const getConvexTaskId = (taskId: string) => {
+    if (!todayTasksData) return null;
+    const convexTask = todayTasksData.find(t => t._id === taskId);
+    return convexTask?._id || null;
+  };
+
+  const handleToggleTask = async (taskId: string) => {
+    try {
+      const convexId = getConvexTaskId(taskId);
+      if (!convexId) {
+        Alert.alert('Error', 'Task not found');
+        return;
       }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await toggleComplete({ id: convexId });
+    } catch (error) {
+      console.error('Failed to toggle task:', error);
+      Alert.alert('Error', 'Failed to update task');
     }
   };
 
-  const handleAddTask = () => {
-    if (newTaskTitle.trim()) {
-      const newTask: Task = {
-        id: `task-${Date.now()}`,
-        title: newTaskTitle.trim(),
-        completed: false,
-        priority: 4,
-        dueDate: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        projectId: 'inbox',
-        labels: [],
-        subtasks: [],
-        order: tasks.length,
-        comments: [],
-        attachments: [],
-      };
-      setTasks([...tasks, newTask]);
-      setNewTaskTitle('');
-      setShowInput(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  const handleAddTask = async () => {
+    if (newTaskTitle.trim() && inboxProject) {
+      try {
+        await createTask({
+          title: newTaskTitle.trim(),
+          priority: 'p4',
+          projectId: inboxProject._id,
+          dueDate: Date.now(),
+          description: undefined,
+          labels: [],
+        });
+        setNewTaskTitle('');
+        setShowInput(false);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (error) {
+        console.error('Failed to create task:', error);
+        Alert.alert('Error', 'Failed to create task');
+      }
     }
   };
 
@@ -74,6 +114,21 @@ export default function TodayScreen() {
       task.description || 'No description',
       [{ text: 'OK' }]
     );
+  };
+
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      const convexId = getConvexTaskId(taskId);
+      if (!convexId) {
+        Alert.alert('Error', 'Task not found');
+        return;
+      }
+      await deleteTask({ id: convexId });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      Alert.alert('Error', 'Failed to delete task');
+    }
   };
 
   const renderTask = ({ item, drag, isActive }: RenderItemParams<Task>) => {
@@ -103,6 +158,15 @@ export default function TodayScreen() {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}`;
   };
+
+  // Show loading state while data is being fetched
+  if (todayTasksData === undefined) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top']}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -138,12 +202,12 @@ export default function TodayScreen() {
       )}
 
       <DraggableFlatList
-        data={tasks}
+        data={activeTasks}
         renderItem={renderTask}
         keyExtractor={(item) => item.id}
         onDragEnd={({ data }) => {
-          setTasks(data);
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          handleTaskReorder(data);
         }}
         contentContainerStyle={{ paddingBottom: 96 }}
         ListEmptyComponent={

@@ -1,0 +1,347 @@
+--- a/.claude/skills/react-native-expo-skill/references/convex-patterns.md
++++ b/.claude/skills/react-native-expo-skill/references/convex-patterns.md
+@@ -1,6 +1,6 @@
+ # Convex Patterns Reference
+
+-Advanced patterns and best practices for Convex backend integration in React Native/Expo apps.
++Advanced patterns and best practices for Convex backend integration in React Native/Expo apps. Based on production testing with React Native 0.81.5, Expo 54, and Convex 1.29.1+.
+
+ ## Database Schema Patterns
+
+@@ -238,6 +238,52 @@ function PaginatedList() {
+ }
+ ```
+
++### Real-time Query Organization with Custom Hooks
++
++**For React Native apps, organize Convex operations in custom hooks for better reusability:**
++
++```tsx
++// src/hooks/useTaskQueries.ts
++import { useQuery } from "convex/react";
++import { api } from "../../convex/_generated/api";
++
++// Organized query hooks
++export function useTodayTasks() {
++  return useQuery(api.tasksQuery.listByToday);
++}
++
++export function useUpcomingTasks() {
++  return useQuery(api.tasksQuery.listByUpcoming);
++}
++
++export function useProjectTasks(projectId: string | undefined) {
++  return useQuery(
++    projectId ? api.tasksQuery.listByProject : null,
++    projectId ? { projectId } : "skip"
++  );
++}
++
++// src/hooks/useTaskMutations.ts
++import { useMutation } from "convex/react";
++import { api } from "../../convex/_generated/api";
++
++export function useTaskMutations() {
++  return {
++    createTask: useMutation(api.tasksMutation.create),
++    updateTask: useMutation(api.tasksMutation.update),
++    toggleComplete: useMutation(api.tasksMutation.toggleComplete),
++    deleteTask: useMutation(api.tasksMutation.delete_),
++  };
++}
++```
++
++**Benefits:**
++- Centralized API access (type-safe)
++- Easy to refactor when adding auth/permissions
++- Consistent error handling patterns
++- Cleaner component code
++- Works well for incremental migration from mock data
++
+ ## Optimistic Updates
+
+ ```tsx
+@@ -250,6 +296,10 @@ function TaskItem({ task }) {
+   const [optimisticCompleted, setOptimisticCompleted] = useState(task.completed);
+
+   const handleToggle = async () => {
++    // ⚡ IMPORTANT FOR REACT NATIVE:
++    // Optimistic updates greatly improve perceived performance
++    // Mobile networks are slower - this gives instant feedback
++
+     // Immediately update UI
+     setOptimisticCompleted(!optimisticCompleted);
+
+@@ -272,6 +322,44 @@ function TaskItem({ task }) {
+ }
+ ```
+
++## Seeding & Initialization
++
++### Official Convex Seeding Pattern (Recommended)
++
++Use `convex/init.ts` with `internalMutation` - this is the official Convex pattern:
++
++```typescript
++// convex/init.ts
++import { internalMutation } from "./_generated/server";
++
++export const init = internalMutation({
++  handler: async (ctx) => {
++    // Check idempotency - safe to run multiple times
++    const existing = await ctx.db.query("projects").collect();
++    if (existing.length > 0) {
++      console.log("✓ Database already seeded");
++      return { success: true, message: "Already seeded" };
++    }
++
++    // Insert seed data - type-safe and schema-checked
++    // ...
++  },
++});
++```
++
++**npm scripts for seeding:**
++```json
++{
++  "seed": "pnpm convex run init:init",
++  "seed:dev": "pnpm convex dev --run init:init",
++  "seed:preview": "pnpm convex deploy --preview-run init:init"
++}
++```
++
++**Why this approach beats custom mutations:**
++- ✅ Official Convex pattern (follows their recommendations)
++- ✅ Idempotent (safe to run multiple times)
++- ✅ Secure (internal mutation prevents client calls)
++- ✅ Reference: https://stack.convex.dev/seeding-data-for-preview-deployments
++
+ ## File Storage
+
+ ### Storing Files
+@@ -449,6 +537,68 @@ export const getStats = query({
+ });
+ ```
+
++## Data Migration & Adapters
++
++### Type Conversion for Migrating from Mock Data
++
++When migrating existing apps from mock data to Convex, create an adapter layer:
++
++```typescript
++// src/utils/convexAdapter.ts
++import { Doc } from "../../convex/_generated/dataModel";
++import { Task } from "../types"; // Your existing type
++
++/**
++ * Convert Convex task to legacy Task type
++ * Allows incremental migration without changing components
++ */
++export function convexTaskToTask(convexTask: Doc<"tasks">): Task {
++  return {
++    id: convexTask._id,
++    title: convexTask.title,
++    completed: convexTask.status === "completed",
++    priority: convexTaskPriorityToNumber(convexTask.priority),
++    dueDate: convexTask.dueDate
++      ? new Date(convexTask.dueDate).toISOString()
++      : undefined,
++    // ... other fields
++  };
++}
++
++export function convexTasksToTasks(tasks: Doc<"tasks">[]): Task[] {
++  return tasks.map(convexTaskToTask);
++}
++
++// Helper to convert priority formats
++function convexTaskPriorityToNumber(priority: string): number {
++  const map: Record<string, number> = {
++    p1: 1, p2: 2, p3: 3, p4: 4
++  };
++  return map[priority] ?? 4;
++}
++```
++
++**Why use an adapter:**
++- Allows screen-by-screen migration
++- Decouples components from Convex types
++- Easy to refactor without touching components
++- Centralized conversion logic
++- Clear path to full migration
++
++**In your component:**
++```tsx
++const convexTasks = useTodayTasks();
++const tasks = useMemo(
++  () => convexTasks ? convexTasksToTasks(convexTasks) : [],
++  [convexTasks]
++);
++```
++
+ ## Error Handling
+
+ ### Client-side Error Handling
+@@ -488,6 +638,38 @@ function TaskCreator() {
+ }
+ ```
+
++### React Native-Specific Error Handling
++
++Use platform-specific UI for errors:
++
++```tsx
++import { Alert, ActivityIndicator } from "react-native";
++import * as Haptics from "expo-haptics";
++
++async function handleTaskMutation(fn: () => Promise<any>) {
++  try {
++    await fn();
++    // Success feedback
++    Haptics.notificationAsync(
++      Haptics.NotificationFeedbackType.Success
++    );
++  } catch (error) {
++    // Error feedback
++    Haptics.notificationAsync(
++      Haptics.NotificationFeedbackType.Error
++    );
++    Alert.alert(
++      "Error",
++      error instanceof Error ? error.message : "Unknown error occurred"
++    );
++  }
++}
++```
++
++**React Native considerations:**
++- Use `Alert.alert()` instead of toast notifications
++- Include haptic feedback for user confirmation
++- Handle connection errors gracefully (higher latency on mobile)
++
+ ### Server-side Validation
+
+ ```typescript
+@@ -600,6 +782,50 @@ export const bulkComplete = mutation({
+ });
+ ```
+
++## Project Organization
++
++### Recommended File Structure for Convex
++
++```
++convex/
++├── schema.ts                 # Table definitions
++├── init.ts                   # Seeding function (official pattern)
++├── tasksQuery.ts            # All task queries exported
++├── tasksMutation.ts         # All task mutations exported
++├── projectsQuery.ts         # All project queries
++├── projectsMutation.ts      # All project mutations
++├── labelsQuery.ts           # Label queries
++├── labelsMutation.ts        # Label mutations
++└── tsconfig.json            # TypeScript config
++
++src/
++└── hooks/
++    ├── useTasks.ts          # Custom hooks for task operations
++    ├── useProjects.ts       # Custom hooks for projects
++    ├── useLabels.ts         # Custom hooks for labels
++    └── index.ts             # Export all hooks
++```
++
++**Key points:**
++- ✅ Flat structure (no nested `queries/`, `mutations/` folders) - avoids API generation issues
++- ✅ File naming: `[domain]Query.ts` and `[domain]Mutation.ts`
++- ✅ One domain per file for organization
++- ✅ Auto-generates API structure:
++  - `api.tasksQuery.list`
++  - `api.tasksMutation.create`
++
++**Avoid:**
++- ❌ Subdirectories (breaks API generation)
++- ❌ Mixing queries and mutations in one file
++- ❌ Long filenames - keep it simple
++
+ ## Testing Patterns
+
+ ### Mock Data Setup
+
++**For testing, use seed functions or separate test files:**
++
+ ```typescript
+ // convex/testData.ts
+ export const seedTestData = internalMutation({
+@@ -626,6 +852,42 @@ export const seedTestData = internalMutation({
+ });
+ ```
+
++## Development Workflow
++
++### Local Development Setup
++
++Run these commands in separate terminal windows:
++
++```bash
++# Terminal 1: Start Convex development server
++# - Auto-deploys function changes
++# - Hot reload on file changes
++# - Access dashboard at http://localhost:3210
++pnpm convex dev
++
++# Terminal 2: Start Expo development server
++# - Rebuilds on app changes
++# - Live reload for React changes
++pnpm start
++
++# Terminal 3 (first time only): Seed database
++# - Populates initial test data
++# - Only needed once, idempotent
++pnpm seed
++```
++
++**Convex Dashboard Features:**
++- View/edit database tables in real-time
++- Test functions manually
++- Monitor function execution
++- Check deployment status
++
++**Tips:**
++- Use `pnpm seed:dev` to re-seed while iterating
++- Convex functions auto-reload - no restart needed
++- Check console logs in dashboard for function debugging
++- Use Chrome DevTools for React component debugging
++
+ ## Common Gotchas
+
+ 1. **Mutations don't return queries** - Mutations can't return live data
+@@ -633,3 +895,26 @@ export const seedTestData = internalMutation({
+ 3. **Indexes need time** - New indexes won't work on old data immediately
+ 4. **Auth in mutations** - Always validate userId in mutations
+ 5. **Storage URLs expire** - Cache storage URLs appropriately
++6. **File organization matters** - Nested query/mutation folders break API generation
++7. **undefined vs null** - `undefined` means loading, `null` means no data
++8. **Query skipping** - Use `"skip"` string, not `false` or `undefined`
++9. **Batch operations matter** - Single mutations are slow, batch them with `Promise.all()`
++10. **Mobile network latency** - Always use optimistic updates in React Native
++
++## React Native-Specific Best Practices
++
++### Loading States
++
++Handle three states explicitly in mobile apps:
++
++```tsx
++const tasks = useQuery(api.tasks.list);
++
++if (tasks === undefined) {
++  return <ActivityIndicator size="large" />; // Loading
++}
++
++if (!tasks || tasks.length === 0) {
++  return <EmptyState />; // No data
++}
++
++return <FlatList data={tasks} ... />; // Success
++```

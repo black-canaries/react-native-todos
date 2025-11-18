@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,54 +9,51 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import * as Haptics from 'expo-haptics';
 import { TaskItem } from '../../src/components/TaskItem';
-import { Task, Project } from '../../src/types';
-import { mockProjects, mockTasks } from '../../src/data/mockData';
+import { Task } from '../../src/types';
+import { useProject, useProjectTasks, useTaskMutations } from '../../src/hooks';
+import { convexTasksToTasks } from '../../src/utils/convexAdapter';
 import { theme } from '../../src/theme';
 
 export default function ProjectDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const project = useMemo(
-    () => mockProjects.find(p => p.id === id),
-    [id]
-  );
+  const projectData = useProject(id);
+  const allTasksData = useProjectTasks(id);
+  const { toggleComplete, deleteTask } = useTaskMutations();
 
-  const [tasks, setTasks] = useState<Task[]>(
-    mockTasks
-      .filter(t => t.projectId === id && !t.completed)
-      .sort((a, b) => a.order - b.order)
-  );
+  // Convert Convex data to legacy format
+  const { activeTasks, completedTasks } = useMemo(() => {
+    if (!allTasksData) {
+      return { activeTasks: [], completedTasks: [] };
+    }
 
-  const [completedTasks, setCompletedTasks] = useState<Task[]>(
-    mockTasks
-      .filter(t => t.projectId === id && t.completed)
-      .sort((a, b) => a.order - b.order)
-  );
+    const converted = convexTasksToTasks(allTasksData);
+    return {
+      activeTasks: converted.filter(t => !t.completed),
+      completedTasks: converted.filter(t => t.completed),
+    };
+  }, [allTasksData]);
 
-  if (!project) {
-    return (
-      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-        <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={28} color={theme.colors.text} />
-          </TouchableOpacity>
-          <Text className="text-xxl font-bold text-text">Project Not Found</Text>
-          <View className="w-7" />
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // Get Convex task ID for mutations
+  const getConvexTaskId = (taskId: string) => {
+    if (!allTasksData) return null;
+    const convexTask = allTasksData.find(t => t._id === taskId);
+    return convexTask?._id || null;
+  };
 
-  const handleTaskToggle = (taskId: string) => {
-    const taskIndex = tasks.findIndex(t => t.id === taskId);
-    if (taskIndex !== -1) {
-      const task = tasks[taskIndex];
-      const updatedTask = { ...task, completed: true };
-      const newTasks = tasks.filter((_, i) => i !== taskIndex);
-      setTasks(newTasks);
-      setCompletedTasks([...completedTasks, updatedTask]);
+  const handleTaskToggle = async (taskId: string) => {
+    try {
+      const convexId = getConvexTaskId(taskId);
+      if (!convexId) {
+        Alert.alert('Error', 'Task not found');
+        return;
+      }
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await toggleComplete({ id: convexId });
+    } catch (error) {
+      console.error('Failed to toggle task:', error);
+      Alert.alert('Error', 'Failed to update task');
     }
   };
 
@@ -66,6 +63,21 @@ export default function ProjectDetailScreen() {
       task.description || 'No description',
       [{ text: 'OK' }]
     );
+  };
+
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      const convexId = getConvexTaskId(taskId);
+      if (!convexId) {
+        Alert.alert('Error', 'Task not found');
+        return;
+      }
+      await deleteTask({ id: convexId });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      Alert.alert('Error', 'Failed to delete task');
+    }
   };
 
   const renderTask = ({ item, drag, isActive }: RenderItemParams<Task>) => {
@@ -89,6 +101,30 @@ export default function ProjectDetailScreen() {
     );
   };
 
+  // Show loading state while data is being fetched
+  if (projectData === undefined || allTasksData === undefined) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top']}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state if project not found
+  if (!projectData) {
+    return (
+      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+        <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={28} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text className="text-xxl font-bold text-text">Project Not Found</Text>
+          <View className="w-7" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
@@ -98,24 +134,24 @@ export default function ProjectDetailScreen() {
         <View className="flex-1 flex-row items-center justify-center">
           <View
             className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: project.color }}
+            style={{ backgroundColor: projectData.color }}
           />
-          <Text className="text-xxl font-bold text-text ml-sm">{project.name}</Text>
+          <Text className="text-xxl font-bold text-text ml-sm">{projectData.name}</Text>
         </View>
         <View className="w-7" />
       </View>
 
       <View className="flex-1 pb-xxl">
-        {tasks.length > 0 && (
+        {activeTasks.length > 0 && (
           <>
             <Text className="text-lg font-semibold text-text px-md py-md pt-lg bg-background border-b border-border">Active Tasks</Text>
             <DraggableFlatList
-              data={tasks}
+              data={activeTasks}
               renderItem={renderTask}
               keyExtractor={(item) => item.id}
               onDragEnd={({ data }) => {
-                setTasks(data);
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                // Tasks are automatically reordered in Convex via subscriptions
               }}
               scrollEnabled={false}
             />
@@ -130,7 +166,7 @@ export default function ProjectDetailScreen() {
                 <TaskItem
                   key={task.id}
                   task={task}
-                  onToggle={() => {}}
+                  onToggle={handleTaskToggle}
                   onPress={handleTaskPress}
                 />
               ))}
@@ -138,7 +174,7 @@ export default function ProjectDetailScreen() {
           </>
         )}
 
-        {tasks.length === 0 && completedTasks.length === 0 && (
+        {activeTasks.length === 0 && completedTasks.length === 0 && (
           <View className="flex-1 justify-center items-center">
             <Ionicons
               name="checkbox-outline"
