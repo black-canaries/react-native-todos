@@ -15,6 +15,7 @@ export function convexTaskToTask(convexTask: Doc<'tasks'>): Task {
     title: convexTask.title,
     description: convexTask.description,
     completed: convexTask.status === 'completed',
+    completedAt: convexTask.completedAt ? new Date(convexTask.completedAt).toISOString() : undefined,
     priority: convexTaskPriorityToNumber(convexTask.priority) as any,
     dueDate: convexTask.dueDate ? new Date(convexTask.dueDate).toISOString() : undefined,
     createdAt: new Date(convexTask.createdAt).toISOString(),

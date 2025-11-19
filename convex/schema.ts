@@ -25,6 +25,7 @@ export default defineSchema({
     ),
     projectId: v.id("projects"),
     dueDate: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
     labels: v.optional(v.array(v.id("labels"))),
     order: v.number(),
     createdAt: v.number(),

@@ -7,6 +7,7 @@ export interface Task {
   title: string;
   description?: string;
   completed: boolean;
+  completedAt?: string; // ISO string
   priority: Priority;
   dueDate?: string; // ISO string
   createdAt: string; // ISO string

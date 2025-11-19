@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Modal,
   TextInput,
   ScrollView,
 } from 'react-native';
@@ -13,8 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useAllProjects, useAllTasks, useProjectMutations } from '../../src/hooks';
-import { theme } from '../../src/theme';
+import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { useAllProjects, useAllTasks, useProjectMutations } from '../../hooks';
+import { theme } from '../../theme';
 
 export default function BrowseScreen() {
   const router = useRouter();
@@ -22,11 +22,33 @@ export default function BrowseScreen() {
   const tasksData = useAllTasks();
   const { createProject } = useProjectMutations();
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [projectName, setProjectName] = useState('');
   const [selectedColor, setSelectedColor] = useState(theme.colors.projectColors[0]);
   const [expandedFavorites, setExpandedFavorites] = useState(true);
   const [expandedMyProjects, setExpandedMyProjects] = useState(true);
+
+  // Open/close handlers for BottomSheetModal
+  const openModal = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+
+  const closeModal = useCallback(() => {
+    bottomSheetModalRef.current?.dismiss();
+  }, []);
+
+  // Backdrop component for bottom sheet
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.8}
+      />
+    ),
+    []
+  );
 
   const projects = useMemo(() => {
     if (!projectsData) return [];
@@ -61,7 +83,7 @@ export default function BrowseScreen() {
       });
       setProjectName('');
       setSelectedColor(theme.colors.projectColors[0]);
-      setShowCreateModal(false);
+      closeModal();
     } catch (error) {
       console.error('Failed to create project:', error);
       Alert.alert('Error', 'Failed to create project');
@@ -84,7 +106,7 @@ export default function BrowseScreen() {
           <Text style={{ color: projectColor }} className="text-xl font-semibold">
             #
           </Text>
-          <Text className="text-md text-text">{project.name}</Text>
+          <Text className="text-lg font-semibold text-text">{project.name}</Text>
         </View>
         <Text className="text-sm text-text-secondary">{taskCount}</Text>
       </TouchableOpacity>
@@ -183,7 +205,7 @@ export default function BrowseScreen() {
               <Ionicons name="chevron-forward" size={16} color={theme.colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setShowCreateModal(true)}
+              onPress={openModal}
               className="flex-row items-center"
             >
               <Ionicons name="add" size={24} color={theme.colors.primary} />
@@ -206,78 +228,80 @@ export default function BrowseScreen() {
         </View>
       </ScrollView>
 
-      {/* Create Project Modal */}
-      <Modal
-        visible={showCreateModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowCreateModal(false)}
+      {/* Create Project Bottom Sheet */}
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        snapPoints={['45%']}
+        enablePanDownToClose
+        enableDismissOnClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{ backgroundColor: theme.colors.backgroundSecondary }}
+        handleIndicatorStyle={{ backgroundColor: theme.colors.textTertiary }}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
       >
-        <SafeAreaView className="flex-1 bg-black/80" edges={['top', 'bottom']}>
-          <View className="flex-1 justify-end">
-            {/* Modal Content */}
-            <View className="bg-background-secondary rounded-t-3xl p-lg max-h-[80%]">
-              {/* Header */}
-              <View className="flex-row justify-between items-center mb-lg border-b border-border pb-md">
-                <Text className="text-xl font-bold text-text">Create Project</Text>
-                <TouchableOpacity onPress={() => setShowCreateModal(false)}>
-                  <Ionicons name="close" size={24} color={theme.colors.text} />
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Project Name Input */}
-                <View className="mb-lg">
-                  <Text className="text-md font-semibold text-text mb-sm">Project Name</Text>
-                  <TextInput
-                    className="bg-background border border-border rounded-lg px-md py-sm text-md text-text min-h-[44px]"
-                    placeholder="Enter project name"
-                    placeholderTextColor={theme.colors.textTertiary}
-                    value={projectName}
-                    onChangeText={setProjectName}
-                  />
-                </View>
-
-                {/* Color Picker */}
-                <View className="mb-lg">
-                  <Text className="text-md font-semibold text-text mb-sm">Color</Text>
-                  <View className="flex-row flex-wrap gap-sm">
-                    {theme.colors.projectColors.map((color) => (
-                      <TouchableOpacity
-                        key={color}
-                        onPress={() => setSelectedColor(color)}
-                        className="flex-row items-center mb-sm"
-                      >
-                        <View
-                          className={`w-12 h-12 rounded-lg border-2 ${selectedColor === color ? 'border-primary' : 'border-transparent'
-                            }`}
-                          style={{ backgroundColor: color }}
-                        />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Create Button */}
-                <TouchableOpacity
-                  onPress={handleCreateProject}
-                  className="bg-primary rounded-lg py-md mt-lg"
-                >
-                  <Text className="text-white text-lg font-bold text-center">Create Project</Text>
-                </TouchableOpacity>
-
-                {/* Cancel Button */}
-                <TouchableOpacity
-                  onPress={() => setShowCreateModal(false)}
-                  className="bg-background-tertiary rounded-lg py-md mt-sm"
-                >
-                  <Text className="text-text text-lg font-semibold text-center">Cancel</Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
+        <BottomSheetView style={{ flex: 1, padding: 24 }}>
+          {/* Header */}
+          <View className="flex-row justify-between items-center mb-lg border-b border-border pb-md">
+            <Text className="text-xl font-bold text-text">Create Project</Text>
+            <TouchableOpacity onPress={closeModal}>
+              <Ionicons name="close" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
           </View>
-        </SafeAreaView>
-      </Modal>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Project Name Input */}
+            <View className="mb-lg">
+              <Text className="text-md font-semibold text-text mb-sm">Project Name</Text>
+              <TextInput
+                className="bg-background border border-border rounded-lg px-md py-sm text-md text-text min-h-[44px]"
+                placeholder="Enter project name"
+                placeholderTextColor={theme.colors.textTertiary}
+                value={projectName}
+                onChangeText={setProjectName}
+                autoFocus
+              />
+            </View>
+
+            {/* Color Picker */}
+            <View className="mb-lg">
+              <Text className="text-md font-semibold text-text mb-sm">Color</Text>
+              <View className="flex-row flex-wrap gap-sm">
+                {theme.colors.projectColors.map((color) => (
+                  <TouchableOpacity
+                    key={color}
+                    onPress={() => setSelectedColor(color)}
+                    className="flex-row items-center mb-sm"
+                  >
+                    <View
+                      className={`w-12 h-12 rounded-lg border-2 ${selectedColor === color ? 'border-primary' : 'border-transparent'
+                        }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Create Button */}
+            <TouchableOpacity
+              onPress={handleCreateProject}
+              className="bg-primary rounded-lg py-md mt-lg"
+            >
+              <Text className="text-white text-lg font-bold text-center">Create Project</Text>
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              onPress={closeModal}
+              className="bg-background-tertiary rounded-lg py-md mt-sm"
+            >
+              <Text className="text-text text-lg font-semibold text-center">Cancel</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </BottomSheetView>
+      </BottomSheetModal>
     </SafeAreaView>
   );
 }

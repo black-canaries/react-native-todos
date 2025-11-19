@@ -2,9 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
-  TextInput,
   Alert,
   ActivityIndicator,
 } from 'react-native';
@@ -15,20 +13,20 @@ import DraggableFlatList, {
   RenderItemParams,
 } from 'react-native-draggable-flatlist';
 import * as Haptics from 'expo-haptics';
-import { TaskItem } from '../../src/components/TaskItem';
-import { EditTaskModal } from '../../src/components/EditTaskModal';
-import { Task } from '../../src/types';
-import { useAllTasks, useTaskMutations, useAllProjects } from '../../src/hooks';
-import { convexTaskToTask, convexTasksToTasks } from '../../src/utils/convexAdapter';
-import { theme } from '../../src/theme';
+import { TaskItem } from '../../components/TaskItem';
+import { EditTaskBottomSheet } from '../../components/EditTaskBottomSheet';
+import { CreateTaskBottomSheet } from '../../components/CreateTaskBottomSheet';
+import { Task } from '../../types';
+import { useAllTasks, useTaskMutations, useAllProjects } from '../../hooks';
+import { convexTasksToTasks } from '../../utils/convexAdapter';
+import { theme } from '../../theme';
 
 export default function InboxScreen() {
   const allTasksData = useAllTasks();
-  const { toggleComplete, createTask, deleteTask, bulkReorderTasks } = useTaskMutations();
+  const { toggleComplete, createTask, bulkReorderTasks } = useTaskMutations();
   const projectsData = useAllProjects();
 
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [showInput, setShowInput] = useState(false);
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Helper to bulk reorder tasks after drag & drop
@@ -36,10 +34,10 @@ export default function InboxScreen() {
     try {
       const convexTasks = reorderedTasks
         .map((task, index) => ({
-          id: getConvexTaskId(task.id),
+          id: task.id,
           newOrder: index,
         }))
-        .filter((t): t is { id: any; newOrder: number } => t.id !== null);
+        .filter((t): t is { id: string; newOrder: number } => !!t.id);
 
       if (convexTasks.length > 0) {
         await bulkReorderTasks({ tasks: convexTasks as any });
@@ -55,7 +53,7 @@ export default function InboxScreen() {
     return projectsData.find((p) => p.name === 'Inbox') || projectsData[0];
   }, [projectsData]);
 
-  // Separate active and completed tasks for the inbox project
+  // Get active and completed tasks for the inbox project
   const { activeTasks, completedTasks } = useMemo(() => {
     if (!allTasksData || !inboxProject) {
       return { activeTasks: [], completedTasks: [] };
@@ -63,10 +61,17 @@ export default function InboxScreen() {
 
     const inboxTasks = allTasksData.filter((t) => t.projectId === inboxProject._id);
     const convertedTasks = convexTasksToTasks(inboxTasks);
-    return {
-      activeTasks: convertedTasks.filter(t => !t.completed),
-      completedTasks: convertedTasks.filter(t => t.completed),
-    };
+
+    const active = convertedTasks.filter(t => !t.completed);
+    const completed = convertedTasks
+      .filter(t => t.completed)
+      .sort((a, b) => {
+        // Sort completed by completedAt ascending (oldest first)
+        return (a.completedAt ? new Date(a.completedAt).getTime() : 0) -
+          (b.completedAt ? new Date(b.completedAt).getTime() : 0);
+      });
+
+    return { activeTasks: active, completedTasks: completed };
   }, [allTasksData, inboxProject]);
 
   // Find original Convex task by converted ID to get the actual Convex ID
@@ -91,43 +96,9 @@ export default function InboxScreen() {
     }
   };
 
-  const handleAddTask = async () => {
-    if (newTaskTitle.trim() && inboxProject) {
-      try {
-        await createTask({
-          title: newTaskTitle.trim(),
-          priority: 'p4',
-          projectId: inboxProject._id,
-          description: undefined,
-          labels: [],
-        });
-        setNewTaskTitle('');
-        setShowInput(false);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } catch (error) {
-        console.error('Failed to create task:', error);
-        Alert.alert('Error', 'Failed to create task');
-      }
-    }
-  };
 
   const handleTaskPress = (task: Task) => {
     setEditingTask(task);
-  };
-
-  const handleTaskDelete = async (taskId: string) => {
-    try {
-      const convexId = getConvexTaskId(taskId);
-      if (!convexId) {
-        Alert.alert('Error', 'Task not found');
-        return;
-      }
-      await deleteTask({ id: convexId });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-      Alert.alert('Error', 'Failed to delete task');
-    }
   };
 
   const renderTask = ({ item, drag, isActive }: RenderItemParams<Task>) => {
@@ -164,31 +135,7 @@ export default function InboxScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-row justify-between items-center px-md py-sm">
         <Text className="text-xxl font-bold text-text">Inbox</Text>
-        <TouchableOpacity onPress={() => setShowInput(!showInput)}>
-          <Ionicons
-            name={showInput ? 'close' : 'add'}
-            size={28}
-            color={theme.colors.primary}
-          />
-        </TouchableOpacity>
       </View>
-
-      {showInput && (
-        <View className="flex-row px-md py-md border-b border-border bg-background gap-sm">
-          <TextInput
-            className="flex-1 bg-background-secondary border border-border rounded-md px-md py-sm text-md text-text min-h-[44px]"
-            placeholder="Task name"
-            placeholderTextColor={theme.colors.textTertiary}
-            value={newTaskTitle}
-            onChangeText={setNewTaskTitle}
-            onSubmitEditing={handleAddTask}
-            autoFocus
-          />
-          <TouchableOpacity onPress={handleAddTask} className="bg-primary px-lg py-sm rounded-lg justify-center min-h-[44px]">
-            <Text className="text-white text-md font-semibold">Add</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       <DraggableFlatList
         data={activeTasks}
@@ -200,41 +147,58 @@ export default function InboxScreen() {
         }}
         contentContainerStyle={{ paddingBottom: 96 }}
         ListEmptyComponent={
-          <View className="items-center justify-center py-xxl px-md">
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={64}
-              color={theme.colors.textTertiary}
-            />
-            <Text className="text-xl font-semibold text-text-secondary mt-md">All done!</Text>
-            <Text className="text-md text-text-tertiary mt-sm">
-              Tap + to add a new task
-            </Text>
-          </View>
-        }
-        ListFooterComponent={
-          completedTasks.length > 0 ? (
-            <View className="mt-lg mx-md border-t border-border pt-md">
-              <Text className="text-sm font-semibold text-text-secondary py-sm mb-sm uppercase tracking-widest">
-                Completed ({completedTasks.length})
+          activeTasks.length === 0 && completedTasks.length === 0 ? (
+            <View className="items-center justify-center py-xxl px-md">
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={64}
+                color={theme.colors.textTertiary}
+              />
+              <Text className="text-xl font-semibold text-text-secondary mt-md">All done!</Text>
+              <Text className="text-md text-text-tertiary mt-sm">
+                Tap + to add a new task
               </Text>
-              {completedTasks.map(task => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onToggle={handleToggleTask}
-                  onPress={handleTaskPress}
-                />
-              ))}
             </View>
           ) : null
         }
+        ListFooterComponent={
+          <View>
+            {/* Completed Tasks Section */}
+            {completedTasks.length > 0 && (
+              <View className="mt-lg mx-md">
+                {completedTasks.map(task => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={handleToggleTask}
+                    onPress={handleTaskPress}
+                  />
+                ))}
+              </View>
+            )}
+
+            {/* Add Task Button */}
+            <TouchableOpacity
+              onPress={() => setShowCreateSheet(true)}
+              className="mx-md mt-lg mb-lg bg-background-secondary rounded-lg py-md px-md flex-row items-center gap-md"
+            >
+              <Ionicons name="add" size={24} color={theme.colors.primary} />
+              <Text className="text-text font-semibold text-md">Add Task</Text>
+            </TouchableOpacity>
+          </View>
+        }
       />
 
-      <EditTaskModal
+      <EditTaskBottomSheet
         visible={!!editingTask}
         task={editingTask}
         onClose={() => setEditingTask(null)}
+      />
+
+      <CreateTaskBottomSheet
+        visible={showCreateSheet}
+        projectId={inboxProject?._id || 'inbox'}
+        onClose={() => setShowCreateSheet(false)}
       />
     </SafeAreaView>
   );

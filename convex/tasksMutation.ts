@@ -84,6 +84,8 @@ export const toggleComplete = mutation({
 
     await ctx.db.patch(id, {
       status: newStatus,
+      ...(newStatus === "completed" && { completedAt: Date.now() }),
+      ...(newStatus === "active" && { completedAt: undefined }),
       updatedAt: Date.now(),
     });
 

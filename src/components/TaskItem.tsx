@@ -33,7 +33,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress }) =
 
   return (
     <TouchableOpacity
-      className="bg-background-secondary px-md py-sm mx-md my-xs border border-border rounded-md"
+      className={`bg-background-secondary px-md py-sm mx-md my-xs border border-border rounded-md ${
+        task.completed ? 'opacity-50' : ''
+      }`}
       onPress={() => onPress(task)}
       activeOpacity={0.7}
     >
