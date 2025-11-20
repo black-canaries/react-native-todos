@@ -190,7 +190,7 @@ export default function TodayScreen() {
           <View>
             {/* Completed Tasks Section */}
             {completedTasks.length > 0 && (
-              <View className="mt-lg mx-md">
+              <View className="">
                 {completedTasks.map(task => (
                   <TaskItem
                     key={task.id}

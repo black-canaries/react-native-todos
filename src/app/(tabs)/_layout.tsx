@@ -24,15 +24,6 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Inbox',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="mail" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="today"
         options={{
           title: 'Today',
@@ -51,20 +42,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="projects"
+        name="browse"
         options={{
           title: 'Browse',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="menu" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Inbox',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="mail" size={size} color={color} />
           ),
         }}
       />

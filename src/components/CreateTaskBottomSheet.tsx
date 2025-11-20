@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import BottomSheet, { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Task } from '../types';
 import { useTaskMutations, useAllProjects } from '../hooks';
@@ -169,7 +169,7 @@ export function CreateTaskBottomSheet({
       backdropComponent={renderBackdrop}
       enablePanDownToClose
       enableDismissOnClose
-      keyboardBehavior="interactive"
+      keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
       backgroundStyle={{
@@ -202,7 +202,7 @@ export function CreateTaskBottomSheet({
           {/* Task Title */}
           <View className="mb-lg">
             <Text className="text-md font-semibold text-text mb-sm">Title</Text>
-            <TextInput
+            <BottomSheetTextInput
               className="bg-background border border-border rounded-lg px-md py-sm text-md text-text min-h-[44px]"
               placeholder="Task name"
               placeholderTextColor={theme.colors.textTertiary}
@@ -303,7 +303,7 @@ export function CreateTaskBottomSheet({
           {/* Description */}
           <View className="mb-lg">
             <Text className="text-md font-semibold text-text mb-sm">Description</Text>
-            <TextInput
+            <BottomSheetTextInput
               className="bg-background border border-border rounded-lg px-md py-sm text-md text-text min-h-[100px]"
               placeholder="Add a description..."
               placeholderTextColor={theme.colors.textTertiary}

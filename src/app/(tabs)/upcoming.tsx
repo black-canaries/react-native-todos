@@ -136,10 +136,6 @@ export default function UpcomingScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
-        <Text className="text-xxl font-bold text-text">Upcoming</Text>
-      </View>
-
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -152,7 +148,7 @@ export default function UpcomingScreen() {
           />
         )}
         renderSectionHeader={({ section: { title, data } }) => (
-          <View className="flex-row justify-between items-center bg-background px-md py-md pt-lg border-b border-border">
+          <View className="flex-row justify-between items-center bg-background px-md py-md pt-lg mb-4 border-b border-border">
             <Text className="text-lg font-semibold text-text">{title}</Text>
             <Text className="text-md font-semibold text-text-secondary">{data.length}</Text>
           </View>
@@ -177,16 +173,14 @@ export default function UpcomingScreen() {
           <View>
             {/* Completed Tasks Section */}
             {completedTasks.length > 0 && (
-              <View className="mt-lg mx-md">
-                {completedTasks.map(task => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onToggle={handleToggleTask}
-                    onPress={handleTaskPress}
-                  />
-                ))}
-              </View>
+              completedTasks.map(task => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onToggle={handleToggleTask}
+                  onPress={handleTaskPress}
+                />
+              ))
             )}
 
             {/* Add Task Button */}

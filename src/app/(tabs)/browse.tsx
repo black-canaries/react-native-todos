@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useCallback } from 'react';
+import React, { useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -18,6 +18,7 @@ import { theme } from '../../theme';
 
 export default function BrowseScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const projectsData = useAllProjects();
   const tasksData = useAllTasks();
   const { createProject } = useProjectMutations();
@@ -27,6 +28,31 @@ export default function BrowseScreen() {
   const [selectedColor, setSelectedColor] = useState(theme.colors.projectColors[0]);
   const [expandedFavorites, setExpandedFavorites] = useState(true);
   const [expandedMyProjects, setExpandedMyProjects] = useState(true);
+
+  // Configure header with user info on left and icons on right
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: '',
+      headerLeft: () => (
+        <View className="flex-row items-center gap-md pl-md">
+          <View className="w-10 h-10 rounded-full bg-primary items-center justify-center border-2 border-primary">
+            <Text className="text-white font-bold text-sm">J</Text>
+          </View>
+          <Text className="text-lg font-semibold text-text">Jonathan</Text>
+        </View>
+      ),
+      headerRight: () => (
+        <View className="flex-row items-center gap-md pr-md">
+          <TouchableOpacity>
+            <Ionicons name="notifications-outline" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Ionicons name="settings-outline" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  }, [navigation]);
 
   // Open/close handlers for BottomSheetModal
   const openModal = useCallback(() => {
@@ -128,44 +154,23 @@ export default function BrowseScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ paddingBottom: 48 }}>
-        {/* Header with User Info */}
-        <View className="flex-row items-center justify-between px-md py-md">
-          <View className="flex-row items-center gap-md">
-            <View className="w-10 h-10 rounded-full bg-primary items-center justify-center border-2 border-primary">
-              <Text className="text-white font-bold text-sm">J</Text>
+
+        {/* Search and Filters sections */}
+        <View className="mt-md mx-md bg-background-secondary/50 rounded-lg">
+          <TouchableOpacity onPress={handleInboxPress} className="flex-row items-center justify-between px-md py-sm">
+            <View className="flex-row items-center gap-md">
+              <Ionicons name="search" size={28} color={theme.colors.primary} />
+              <Text className="text-lg font-semibold text-text">Search</Text>
             </View>
-            <Text className="text-xl font-semibold text-text">Jonathan</Text>
-          </View>
-          <View className="flex-row items-center gap-md">
-            <TouchableOpacity>
-              <Ionicons name="notifications-outline" size={24} color={theme.colors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Ionicons name="settings-outline" size={24} color={theme.colors.primary} />
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center justify-between px-md py-sm">
+            <View className="flex-row items-center gap-md">
+              <Ionicons name="apps" size={28} color={theme.colors.primary} />
+              <Text className="text-lg font-semibold text-text">Filters & Labels</Text>
+            </View>
+          </TouchableOpacity>
         </View>
-
-        {/* Upgrade Banner */}
-        <TouchableOpacity className="mx-md mb-md bg-background-secondary rounded-lg p-md flex-row items-center gap-md border border-border">
-          <Ionicons name="star" size={28} color={theme.colors.primary} />
-          <View className="flex-1">
-            <Text className="text-lg font-semibold text-text">Upgrade to Pro</Text>
-            <Text className="text-sm text-text-secondary">Set up reminders, add extra projects, and more.</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color={theme.colors.textSecondary} />
-        </TouchableOpacity>
-
-        {/* Inbox and Filters sections */}
-        <TouchableOpacity onPress={handleInboxPress} className="mx-md mb-sm bg-background-secondary rounded-lg p-md flex-row items-center gap-md border border-border">
-          <Ionicons name="bag-outline" size={28} color={theme.colors.primary} />
-          <Text className="text-lg font-semibold text-text">Inbox</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity className="mx-md mb-md bg-background-secondary rounded-lg p-md flex-row items-center gap-md border border-border">
-          <Ionicons name="apps" size={28} color={theme.colors.primary} />
-          <Text className="text-lg font-semibold text-text">Filters & Labels</Text>
-        </TouchableOpacity>
 
         {/* Favorites Section */}
         {favoriteProjects.length > 0 && (
@@ -198,9 +203,6 @@ export default function BrowseScreen() {
               onPress={() => setExpandedMyProjects(!expandedMyProjects)}
               className="flex-row items-center flex-1 gap-sm"
             >
-              <View className="w-8 h-8 rounded-full bg-background-tertiary items-center justify-center">
-                <Text className="text-xs text-text-secondary font-semibold">J</Text>
-              </View>
               <Text className="text-xl font-semibold text-text">My Projects</Text>
               <Ionicons name="chevron-forward" size={16} color={theme.colors.textSecondary} />
             </TouchableOpacity>

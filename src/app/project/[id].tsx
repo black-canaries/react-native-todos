@@ -180,16 +180,14 @@ export default function ProjectDetailScreen() {
               <View>
                 {/* Completed Tasks Section */}
                 {completedTasks.length > 0 && (
-                  <View className="mt-lg mx-md">
-                    {completedTasks.map(task => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        onToggle={handleTaskToggle}
-                        onPress={handleTaskPress}
-                      />
-                    ))}
-                  </View>
+                  completedTasks.map(task => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggle={handleTaskToggle}
+                      onPress={handleTaskPress}
+                    />
+                  ))
                 )}
 
                 {/* Add Task Button */}

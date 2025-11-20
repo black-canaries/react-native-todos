@@ -133,10 +133,6 @@ export default function InboxScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="flex-row justify-between items-center px-md py-sm">
-        <Text className="text-xxl font-bold text-text">Inbox</Text>
-      </View>
-
       <DraggableFlatList
         data={activeTasks}
         renderItem={renderTask}
@@ -165,17 +161,17 @@ export default function InboxScreen() {
           <View>
             {/* Completed Tasks Section */}
             {completedTasks.length > 0 && (
-              <View className="mt-lg mx-md">
-                {completedTasks.map(task => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onToggle={handleToggleTask}
-                    onPress={handleTaskPress}
-                  />
-                ))}
-              </View>
-            )}
+              completedTasks.map(task => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onToggle={handleToggleTask}
+                  onPress={handleTaskPress}
+                />
+              )
+              )
+            )
+            }
 
             {/* Add Task Button */}
             <TouchableOpacity
