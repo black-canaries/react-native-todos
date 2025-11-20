@@ -1,10 +1,16 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const list = query({
   handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
     return await ctx.db
       .query("projects")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("asc")
       .collect();
   },
@@ -13,14 +19,27 @@ export const list = query({
 export const get = query({
   args: { id: v.id("projects") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+    const project = await ctx.db.get(id);
+    if (project?.userId !== userId) {
+      return null;
+    }
+    return project;
   },
 });
 
 export const listWithTaskCounts = query({
   handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
     const projects = await ctx.db
       .query("projects")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("asc")
       .collect();
 
@@ -28,7 +47,9 @@ export const listWithTaskCounts = query({
       projects.map(async (project) => {
         const tasks = await ctx.db
           .query("tasks")
-          .filter((q) => q.eq(q.field("projectId"), project._id))
+          .withIndex("by_user_and_project", (q) =>
+            q.eq("userId", userId).eq("projectId", project._id)
+          )
           .collect();
 
         const activeTasks = tasks.filter((t) => t.status === "active");

@@ -1,5 +1,6 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const create = mutation({
   args: {
@@ -7,7 +8,13 @@ export const create = mutation({
     color: v.string(),
   },
   handler: async (ctx, { name, color }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
     return await ctx.db.insert("labels", {
+      userId,
       name,
       color,
       createdAt: Date.now(),
@@ -23,8 +30,14 @@ export const update = mutation({
     color: v.optional(v.string()),
   },
   handler: async (ctx, { id, name, color }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
     const label = await ctx.db.get(id);
     if (!label) throw new Error("Label not found");
+    if (label.userId !== userId) throw new Error("Unauthorized");
 
     await ctx.db.patch(id, {
       ...(name !== undefined && { name }),
@@ -39,11 +52,20 @@ export const update = mutation({
 export const delete_ = mutation({
   args: { id: v.id("labels") },
   handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthorized");
+    }
+
     const label = await ctx.db.get(id);
     if (!label) throw new Error("Label not found");
+    if (label.userId !== userId) throw new Error("Unauthorized");
 
-    // Remove label from all tasks
-    const tasks = await ctx.db.query("tasks").collect();
+    // Remove label from all user's tasks
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
 
     for (const task of tasks) {
       if (task.labels && task.labels.includes(id)) {

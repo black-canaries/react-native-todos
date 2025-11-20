@@ -1,8 +1,12 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-export default defineSchema({
+const schema = defineSchema({
+  ...authTables,
+
   projects: defineTable({
+    userId: v.id("users"),
     name: v.string(),
     color: v.string(),
     isFavorite: v.boolean(),
@@ -10,10 +14,13 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_user", ["userId"])
+    .index("by_user_and_order", ["userId", "order"])
     .index("by_creation", ["createdAt"])
     .index("by_order", ["order"]),
 
   tasks: defineTable({
+    userId: v.id("users"),
     title: v.string(),
     description: v.optional(v.string()),
     status: v.union(v.literal("active"), v.literal("completed")),
@@ -31,16 +38,23 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_user", ["userId"])
+    .index("by_user_and_status", ["userId", "status"])
+    .index("by_user_and_project", ["userId", "projectId"])
     .index("by_project", ["projectId"])
     .index("by_status", ["status"])
     .index("by_due_date", ["dueDate"])
     .index("by_order", ["order"]),
 
   labels: defineTable({
+    userId: v.id("users"),
     name: v.string(),
     color: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_user", ["userId"])
     .index("by_creation", ["createdAt"]),
 });
+
+export default schema;
