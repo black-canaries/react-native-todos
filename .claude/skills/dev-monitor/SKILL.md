@@ -1,6 +1,6 @@
 ---
 name: dev-monitor
-description: Run React Native/Expo apps in background with continuous error monitoring and auto-fixing. Use when developing locally and need to run the app (iOS, Android, or Expo dev server) with automatic detection and fixing of common errors like missing dependencies, cache issues, port conflicts, or configuration problems. Monitors continuously until manually stopped.
+description: Runs React Native/Expo development servers (iOS/Android/Expo) in background with continuous error monitoring and automatic fixes for missing dependencies, cache issues, port conflicts, and configuration problems. Use when developing locally to maintain hands-free development until manually stopped.
 ---
 
 <objective>
@@ -37,153 +37,55 @@ The skill handles all three and auto-detects the correct command based on your r
 </quick_start>
 
 <workflow>
-<step_1_platform_selection>
-**Determine which platform to run**
+**1. Platform selection**
+- Determine from user request or ask: iOS (`pnpm run ios`), Android (`pnpm run android`), or Expo (`pnpm expo start`)
+- Store selected command for restarts
 
-If user specified platform:
-- "run iOS" ’ `pnpm run ios`
-- "run Android" ’ `pnpm run android`
-- "start Expo" or "run dev server" ’ `pnpm expo start`
+**2. Start in background**
+- Run command with `run_in_background: true`
+- Capture shell ID for monitoring
+- Report: "Started [platform] in background, monitoring..."
 
-If not specified, ask:
-```
-Which platform would you like to run?
-1. iOS (pnpm run ios)
-2. Android (pnpm run android)
-3. Expo dev server (pnpm expo start)
-```
+**3. Continuous monitoring**
+- Poll BashOutput every 5-10 seconds
+- Analyze for error patterns (see error_patterns section)
+- On error: identify type, apply fix, restart, report
+- On success: report once, continue monitoring
+- Loop until user stops
 
-Store the selected command for restarts after fixes.
-</step_1_platform_selection>
+**4. Auto-fix errors**
+Apply fixes automatically when detected:
 
-<step_2_start_background>
-**Start command in background**
+- **Missing deps**: `pnpm install` â†’ restart
+- **Cache issues**: Kill metro, `pnpm expo start -c` â†’ already restarted
+- **Port conflicts**: `lsof -ti:8081 | xargs kill -9` â†’ restart
+- **Native build**: `pnpm expo prebuild --clean` â†’ restart after complete
+- **TypeScript**: Show errors, ask user to fix (no auto-restart)
 
-1. Run the selected command in background:
-   ```bash
-   pnpm run ios  # or android, or expo start
-   ```
-   Use `run_in_background: true` parameter
+After fix: Kill previous process, restart command, resume monitoring
 
-2. Capture the shell ID for monitoring
-
-3. Report to user:
-   ```
-   Started iOS app in background (shell_id: xyz)
-   Monitoring output for errors...
-   ```
-
-4. Store shell ID for later use with BashOutput
-</step_2_start_background>
-
-<step_3_continuous_monitoring>
-**Monitor output and detect errors**
-
-1. Poll BashOutput every 5-10 seconds:
-   ```
-   BashOutput(bash_id: shell_id)
-   ```
-
-2. Analyze output for error patterns (see error_patterns below)
-
-3. When error detected:
-   - Identify error type
-   - Apply appropriate fix
-   - Report fix to user
-   - Restart command if needed
-   - Continue monitoring
-
-4. When successful startup:
-   - Report "App running successfully"
-   - Continue monitoring for runtime errors
-
-5. Loop until user says stop or sends termination signal
-</step_3_continuous_monitoring>
-
-<step_4_auto_fix_errors>
-**Automatic error detection and fixing**
-
-When errors detected, apply fixes automatically:
-
-**Missing dependencies:**
-- Pattern: `Cannot find module`, `Module not found`, `ENOENT`
-- Fix: `pnpm install`
-- Report: "Fixed missing dependencies, restarting..."
-
-**Cache issues:**
-- Pattern: `Metro cache`, `Unable to resolve module`, `Cached`
-- Fix: `pnpm expo start -c` (clear cache)
-- Report: "Cleared Metro cache, restarting..."
-
-**Port conflicts:**
-- Pattern: `EADDRINUSE`, `Port 8081 already in use`
-- Fix: `lsof -ti:8081 | xargs kill -9` then retry
-- Report: "Killed conflicting process on port 8081, restarting..."
-
-**Build/prebuild needed:**
-- Pattern: `native module`, `CocoaPods`, `Gradle`
-- Fix: `pnpm expo prebuild --clean`
-- Report: "Running prebuild, this may take a moment..."
-
-**TypeScript errors:**
-- Pattern: `Type error`, `TS[0-9]+:`
-- Fix: Show errors, ask user to fix code
-- Report: "TypeScript errors detected. Please fix the errors shown above."
-- Don't restart automatically (requires code changes)
-
-After each fix:
-- Kill previous background process if still running
-- Restart the command in background
-- Resume monitoring
-</step_4_auto_fix_errors>
-
-<step_5_reporting>
-**Report fixes and status**
-
-When error fixed:
-```
-=' Fixed: [error type]
-   Action: [what was done]
-   Restarting: [command]
-   Status: Monitoring...
-```
-
-When app running successfully:
-```
- App running successfully
-   Monitoring for errors... (Ctrl+C or say "stop" to end)
-```
-
-When runtime error occurs:
-```
-   Runtime error detected:
-   [error message]
-   Attempting fix...
-```
-
-Keep user informed but don't spam with too many messages.
-</step_5_reporting>
+**5. Reporting**
+Keep user informed:
+- "Fixed: [error type], restarting..."
+- "App running successfully, monitoring..."
+- "Runtime error detected: [message], attempting fix..."
 </workflow>
 
 <error_patterns>
 <dependency_errors>
-**Pattern matching:**
+**Regex patterns:**
 ```regex
 Cannot find module ['"](.+)['"]
 Module not found: Error: Can't resolve ['"](.+)['"]
 ENOENT: no such file or directory
 ```
 
-**Fix:**
-```bash
-pnpm install
-```
-
+**Fix:** `pnpm install`
 **Restart:** Yes
 </dependency_errors>
 
 <cache_errors>
-**Pattern matching:**
+**Regex patterns:**
 ```regex
 Metro.*cache
 Unable to resolve module.*metro
@@ -193,38 +95,27 @@ Transform cache
 
 **Fix:**
 ```bash
-# Kill existing metro
 pkill -f "expo|metro"
-
-# Clear cache and restart
 pnpm expo start -c
 ```
 
-**Restart:** Command already includes restart with -c flag
+**Restart:** Command includes restart with -c flag
 </cache_errors>
 
 <port_conflicts>
-**Pattern matching:**
+**Regex patterns:**
 ```regex
 EADDRINUSE.*:(\d+)
 Port (\d+) is already in use
 address already in use.*:(\d+)
 ```
 
-**Fix:**
-```bash
-# Extract port number from error
-# Kill process on that port
-lsof -ti:8081 | xargs kill -9
-
-# Retry command
-```
-
+**Fix:** `lsof -ti:8081 | xargs kill -9` (extract port from error)
 **Restart:** Yes
 </port_conflicts>
 
 <native_build_errors>
-**Pattern matching:**
+**Regex patterns:**
 ```regex
 CocoaPods could not find
 Gradle build failed
@@ -232,35 +123,25 @@ native module.*not found
 expo-modules.*not configured
 ```
 
-**Fix:**
-```bash
-pnpm expo prebuild --clean
-```
-
+**Fix:** `pnpm expo prebuild --clean`
 **Restart:** Yes, after prebuild completes
 </native_build_errors>
 
 <typescript_errors>
-**Pattern matching:**
+**Regex patterns:**
 ```regex
 Type error: .+
 TS\d+: .+
 TypeScript error in .+
 ```
 
-**Fix:** Don't auto-fix, requires code changes
-
-**Action:**
-1. Show errors to user
-2. Ask user to fix code
-3. Continue monitoring (may auto-recover when files saved)
-4. Don't restart automatically
-
+**Fix:** Don't auto-fix (requires code changes)
+**Action:** Show errors, ask user to fix, continue monitoring
 **Restart:** No
 </typescript_errors>
 
 <configuration_errors>
-**Pattern matching:**
+**Regex patterns:**
 ```regex
 babel\.config\.js
 metro\.config\.js
@@ -268,144 +149,53 @@ app\.json.*invalid
 Config file.*error
 ```
 
-**Fix:**
-- Check config files exist
-- Verify syntax is correct
-- Show specific error to user
-- May require manual fix
-
+**Fix:** Check config files, show error, may require manual fix
 **Restart:** After user confirms fix
 </configuration_errors>
 </error_patterns>
 
-<monitoring_loop>
-**Continuous monitoring implementation:**
-
-```pseudocode
-while (!user_stopped) {
-  // Poll output every 5 seconds
-  output = BashOutput(shell_id)
-
-  if (output.contains_error) {
-    error_type = detect_error_type(output)
-
-    if (auto_fixable(error_type)) {
-      apply_fix(error_type)
-      kill_process(shell_id)
-      shell_id = restart_command()
-      report_fix(error_type)
-    } else {
-      report_error_needs_manual_fix(output)
-      wait_for_user_action()
-    }
-  } else if (output.contains_success_indicator) {
-    if (!already_reported_success) {
-      report_success()
-      already_reported_success = true
-    }
-  }
-
-  wait(5_seconds)
-}
-```
-
-**Success indicators:**
-- "Bundling complete"
-- "Waiting on"
-- "Metro waiting"
-- "Successfully compiled"
-
-**Stop conditions:**
-- User says "stop monitoring" or "stop"
-- User presses Ctrl+C (detected via shell termination)
-- Unrecoverable error after multiple fix attempts
-</monitoring_loop>
-
 <anti_patterns>
-L **Don't restart on every output line:**
-```
-# Wrong - too eager
+**NEVER restart on every output line:**
+```bash
+# Wrong - too eager, causes restart loops
 if (output) { restart(); }
 ```
 
-L **Don't ignore errors:**
-```
-# Wrong - silent failures
+**NEVER ignore errors:**
+```bash
+# Wrong - silent failures prevent fixes
 if (error) { continue; }
 ```
 
-L **Don't run in foreground:**
-```
+**NEVER run in foreground:**
+```bash
 # Wrong - blocks conversation
 pnpm run ios  # without run_in_background
 ```
 
- **Correct approach:**
-```
-# Right - background with monitoring
-1. Start: pnpm run ios (background)
-2. Poll: BashOutput every 5-10 seconds
-3. Detect: Match error patterns
-4. Fix: Auto-fix when possible
-5. Report: What was done
-6. Resume: Continue monitoring
-```
+**Correct approach:**
+1. Start command in background: `pnpm run ios` (with `run_in_background: true`)
+2. Poll output: BashOutput every 5-10 seconds
+3. Detect errors: Match against error patterns
+4. Auto-fix: Apply fixes when possible
+5. Report: Inform user what was done
+6. Resume: Continue monitoring loop
 </anti_patterns>
 
 <success_criteria>
 Successful monitoring session includes:
 
--  App started in background (command running)
--  Output being monitored continuously
--  Errors detected automatically
--  Common errors fixed without user intervention
--  Fixes reported clearly to user
--  App restarts automatically after fixes
--  Monitoring continues until user stops
--  User can continue chatting while monitoring runs
+- App started in background (command running)
+- Output being monitored continuously
+- Errors detected automatically
+- Common errors fixed without user intervention
+- Fixes reported clearly to user
+- App restarts automatically after fixes
+- Monitoring continues until user stops
+- User can continue chatting while monitoring runs
 
 The skill provides hands-free development environment.
 </success_criteria>
-
-<common_commands>
-<ios_monitoring>
-```bash
-# Start iOS in background
-pnpm run ios
-
-# Common fixes for iOS:
-- pnpm install (missing deps)
-- pnpm expo prebuild --clean (native modules)
-- pkill -f "expo|metro" && pnpm expo start -c (cache)
-- pod install (iOS specific, in ios/ directory)
-```
-</ios_monitoring>
-
-<android_monitoring>
-```bash
-# Start Android in background
-pnpm run android
-
-# Common fixes for Android:
-- pnpm install (missing deps)
-- pnpm expo prebuild --clean (native modules)
-- pkill -f "expo|metro" && pnpm expo start -c (cache)
-- ./gradlew clean (Android specific, in android/ directory)
-```
-</android_monitoring>
-
-<expo_monitoring>
-```bash
-# Start Expo dev server in background
-pnpm expo start
-
-# Common fixes for Expo:
-- pnpm install (missing deps)
-- pnpm expo start -c (cache)
-- lsof -ti:8081 | xargs kill -9 (port conflict)
-```
-</expo_monitoring>
-</common_commands>
 
 <troubleshooting>
 **Monitoring stopped unexpectedly:**
@@ -425,7 +215,6 @@ pnpm expo start
 
 **Can't kill background process:**
 ```bash
-# Find and kill manually
 ps aux | grep "expo\|metro"
 kill -9 <pid>
 ```

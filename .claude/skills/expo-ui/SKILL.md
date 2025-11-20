@@ -1,6 +1,6 @@
 ---
 name: expo-ui
-description: SwiftUI integration for React Native apps using Expo UI. Use when building iOS apps with SwiftUI components in React Native, creating native iOS interfaces, building Settings-style forms, implementing iOS system UI patterns, using SwiftUI modifiers and effects, or integrating native iOS components like CircularProgress, Switch, or Picker.
+description: Enables native SwiftUI component integration in React Native via Expo UI's JavaScript API. Use when building iOS-native interfaces (Settings forms, system UI patterns, glass effects) without reimplementation overhead.
 ---
 
 <objective>
@@ -42,11 +42,7 @@ export default function MyComponent() {
 </basic_usage>
 
 <host_component_concept>
-**The Host Component** is the bridge between React Native (UIKit) and SwiftUI. Think of it like:
-- `<svg>` in DOM (creates a rendering context)
-- `<Canvas>` in react-native-skia (separate rendering layer)
-
-**Critical Rule:** Always wrap SwiftUI components in `<Host>`.
+**The Host Component** creates a SwiftUI rendering context that bridges React Native's UIKit layer. All SwiftUI components MUST be wrapped in `<Host>` to render.
 
 ```javascript
 import { Host, CircularProgress } from '@expo/ui/swift-ui';
@@ -61,10 +57,27 @@ export default function LoadingView() {
 ```
 
 **Host props:**
-- `matchContents` - Sizes Host to fit its SwiftUI content (auto-sizing)
-- `style` - Apply React Native flexbox styles to the Host container itself
+- `matchContents` - Auto-sizes Host to fit SwiftUI content
+- `style` - Apply React Native flexbox to Host container
 </host_component_concept>
 </quick_start>
+
+<workflow>
+**Typical implementation flow:**
+
+1. **Install** - `npx expo install @expo/ui`
+2. **Import components** - Import from `@expo/ui/swift-ui` (components) and `@expo/ui/swift-ui/modifiers` (styling)
+3. **Wrap in Host** - Create `<Host>` wrapper with `matchContents` or flexbox `style`
+4. **Build UI** - Use `VStack`/`HStack` for layout, add Text/Button/Form components
+5. **Apply modifiers** - Add styling via `modifiers` prop array (padding, background, clipShape)
+6. **Test iOS version** - Verify advanced features (glassEffect requires iOS 18+)
+
+**Key decision points:**
+- Use `matchContents` when Host should size to content
+- Use `style={{ flex: 1 }}` when Host should fill parent
+- Minimize Host nesting for better performance
+- Check iOS version requirements for modifiers
+</workflow>
 
 <layout_system>
 <swiftui_layouts>
@@ -118,39 +131,28 @@ Inside `<Host>`, use SwiftUI layout components. **Flexbox is NOT available insid
 <essential_components>
 <text_and_images>
 ```javascript
-// Text with size and color
 <Text size="title">Large Title</Text>
 <Text size="body" color="secondary">Body text</Text>
 
-// System icons via SF Symbols
 <Image systemName="wifi" size={20} color="#007aff" />
 <Image systemName="heart.fill" size={24} />
 ```
 
 **Text sizes:** `largeTitle`, `title`, `title2`, `title3`, `headline`, `body`, `callout`, `subheadline`, `footnote`, `caption`, `caption2`
 
-**Colors:** Use hex codes or semantic values like `"primary"`, `"secondary"`, `"label"`, `"systemBackground"`
+**Colors:** Hex codes or semantic values (`"primary"`, `"secondary"`, `"label"`, `"systemBackground"`)
 </text_and_images>
 
 <interactive_controls>
 ```javascript
-// Button
 <Button onPress={handlePress}>
   <Text>Tap Me</Text>
 </Button>
 
-// Switch/Toggle
 <Switch value={isEnabled} onValueChange={setIsEnabled} />
 
-// Slider
-<Slider
-  value={volume}
-  onValueChange={setVolume}
-  minimumValue={0}
-  maximumValue={100}
-/>
+<Slider value={volume} onValueChange={setVolume} minimumValue={0} maximumValue={100} />
 
-// Picker
 <Picker selection={selected} onSelectionChange={setSelected}>
   <PickerItem label="Option 1" value="opt1" />
   <PickerItem label="Option 2" value="opt2" />
@@ -160,13 +162,8 @@ Inside `<Host>`, use SwiftUI layout components. **Flexbox is NOT available insid
 
 <progress_indicators>
 ```javascript
-// Circular progress (indeterminate)
-<CircularProgress />
-
-// Circular progress (determinate)
-<CircularProgress value={0.75} />
-
-// Linear progress
+<CircularProgress />  {/* Indeterminate */}
+<CircularProgress value={0.75} />  {/* Determinate */}
 <LinearProgress value={progress} />
 ```
 </progress_indicators>
@@ -401,44 +398,14 @@ Loading overlay with glass effect:
 </common_patterns>
 
 <critical_rules>
-<must_follow>
-1. **Always use Host** - SwiftUI components MUST be wrapped in `<Host>` component
-2. **No flexbox in SwiftUI** - Use `HStack`/`VStack`/`ZStack` instead of flex layouts
+1. **Always use Host** - SwiftUI components MUST be wrapped in `<Host>` (❌ `<Text>Hello</Text>` won't render)
+2. **No flexbox in SwiftUI** - Use `HStack`/`VStack`/`ZStack`, not `<View style={{ flexDirection: 'row' }}>`
 3. **iOS-only currently** - Android and Web support planned but not available yet
 4. **Clear boundaries** - Minimize React Native ↔ SwiftUI transitions for performance
 5. **Check iOS versions** - Some modifiers (like `glassEffect`) require iOS 18+
-6. **One Host per SwiftUI tree** - Don't nest Host unnecessarily
-</must_follow>
+6. **One Host per tree** - Don't nest Host unnecessarily (performance overhead)
 
-<common_mistakes>
-❌ **Forgetting Host wrapper:**
-```javascript
-// Wrong - won't render
-<Text>SwiftUI Text</Text>
-```
-
-❌ **Using flexbox inside Host:**
-```javascript
-// Wrong - flexbox doesn't work in SwiftUI
-<Host>
-  <View style={{ flexDirection: 'row' }}>
-    <Text>Text</Text>
-  </View>
-</Host>
-```
-
-❌ **Unnecessary Host nesting:**
-```javascript
-// Wrong - extra Host overhead
-<Host>
-  <VStack>
-    <Host><Text>Item 1</Text></Host>
-    <Host><Text>Item 2</Text></Host>
-  </VStack>
-</Host>
-```
-
-✅ **Correct approach:**
+**Correct pattern:**
 ```javascript
 <Host style={{ flex: 1 }}>
   <VStack spacing={8}>
@@ -447,7 +414,6 @@ Loading overlay with glass effect:
   </VStack>
 </Host>
 ```
-</common_mistakes>
 </critical_rules>
 
 <troubleshooting>

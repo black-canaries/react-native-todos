@@ -8,68 +8,13 @@ Provide comprehensive guidance for building modern React Native applications usi
 </objective>
 
 <quick_start>
-<stack>
-**Core Technologies:**
-- **Expo**: React Native framework with managed workflow and file-based routing (Expo Router)
-- **NativeWind v4**: Tailwind CSS for React Native using `className` prop
-- **Reanimated v3+**: UI-thread animations with worklets for 60fps performance
-- **Convex**: Real-time backend with automatic sync, type-safe queries, and built-in auth
-- **pnpm**: Fast, disk-efficient package manager (required for this stack)
-</stack>
+**Get started in 3 steps:**
 
-<development_commands>
-```bash
-# Install dependencies
-pnpm install
+1. Install dependencies: `pnpm install`
+2. Start dev server: `pnpm expo start` (use `pnpm`, never `npm`)
+3. Start backend: `pnpm convex dev`
 
-# Start development server
-pnpm expo start
-
-# Platform-specific
-pnpm expo start --ios
-pnpm expo start --android
-pnpm expo start --web
-
-# Clear cache (when config changes)
-pnpm expo start -c
-
-# Start Convex backend
-pnpm convex dev
-```
-
-**Critical:** Always use `pnpm` (never `npm` or `npx`). All Expo commands must be prefixed with `pnpm`.
-</development_commands>
-
-<project_structure>
-```
-project-root/
-├── app/                          # Expo Router (file-based routing)
-│   ├── (tabs)/                   # Tab navigation group
-│   │   ├── index.tsx             # Inbox/home screen
-│   │   ├── _layout.tsx           # Tab config
-│   │   └── ...                   # Other tabs
-│   ├── _layout.tsx               # Root layout (GestureHandlerRootView + ConvexProvider)
-│   └── [dynamic].tsx             # Dynamic routes
-├── src/
-│   ├── components/               # Reusable UI components
-│   ├── utils/                    # Utility functions
-│   ├── theme/                    # Design tokens
-│   └── types/                    # TypeScript types
-├── convex/                       # Convex backend
-│   ├── _generated/               # Auto-generated types
-│   ├── schema.ts                 # Database schema
-│   ├── auth.config.ts            # Auth setup
-│   └── *.ts                      # Server functions (queries/mutations)
-├── babel.config.js               # Babel config (NativeWind + Reanimated plugins)
-├── metro.config.js               # Metro bundler config (CJS support)
-├── tailwind.config.js            # NativeWind/Tailwind config
-└── app.json                      # Expo configuration
-```
-</project_structure>
-
-<essential_setup>
-**Root Layout (app/_layout.tsx):**
-
+**Root layout setup (app/_layout.tsx):**
 ```tsx
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -88,12 +33,23 @@ export default function RootLayout() {
 }
 ```
 
-**Key Requirements:**
-1. Wrap app in `GestureHandlerRootView` for Reanimated gestures
-2. Wrap app in `ConvexProvider` for backend connectivity
-3. Use Expo Router's `Stack` or `Tabs` for navigation
-</essential_setup>
+See `<stack>` and `<configuration_requirements>` sections for detailed setup.
 </quick_start>
+
+<stack>
+**Core Technologies:**
+- **Expo**: React Native framework with managed workflow and file-based routing (Expo Router)
+- **NativeWind v4**: Tailwind CSS for React Native using `className` prop
+- **Reanimated v3+**: UI-thread animations with worklets for 60fps performance
+- **Convex**: Real-time backend with automatic sync, type-safe queries, and built-in auth
+- **pnpm**: Fast, disk-efficient package manager (required for this stack)
+
+**Common commands:**
+- `pnpm expo start` - Start dev server
+- `pnpm expo start --ios/android/web` - Platform-specific
+- `pnpm expo start -c` - Clear cache (after config changes)
+- `pnpm convex dev` - Start Convex backend
+</stack>
 
 <nativewind_essentials>
 <basic_usage>
@@ -151,32 +107,12 @@ export default function Component() {
 </common_patterns>
 
 <responsive_and_dark_mode>
-**Responsive Design:**
-```tsx
-<View className="w-full md:w-1/2 lg:w-1/3 p-4">
-  <Text className="text-base sm:text-lg md:text-xl">Responsive</Text>
-</View>
-```
+**Responsive:** `w-full md:w-1/2 lg:w-1/3` `text-base sm:text-lg md:text-xl`
 
-**Dark Mode:**
-```tsx
-<View className="bg-white dark:bg-gray-900">
-  <Text className="text-gray-900 dark:text-white">Theme-aware</Text>
-</View>
-```
+**Dark Mode:** `bg-white dark:bg-gray-900` `text-gray-900 dark:text-white`
 
-**Platform-Specific (NativeWind v4):**
-```tsx
-<View className="ios:pt-12 android:pt-4 web:cursor-pointer">
-  {/* content */}
-</View>
-```
+**Platform-Specific:** `ios:pt-12 android:pt-4 web:cursor-pointer`
 </responsive_and_dark_mode>
-
-<advanced_reference>
-For complete NativeWind API, custom theming, and advanced patterns:
-→ [references/nativewind-api.md](references/nativewind-api.md)
-</advanced_reference>
 </nativewind_essentials>
 
 <reanimated_essentials>
@@ -272,30 +208,8 @@ import Animated, { FadeIn, FadeOut, Layout, SlideInLeft } from 'react-native-rea
 </layout_animations>
 
 <worklets>
-Functions marked with 'worklet' run on UI thread:
-
-```tsx
-const calculateOffset = (input: number) => {
-  'worklet';
-  return input * 2 + 10;
-};
-
-const animatedStyle = useAnimatedStyle(() => {
-  return {
-    transform: [{ translateX: calculateOffset(offset.value) }],
-  };
-});
-```
-
-**Communication between threads:**
-- `runOnUI(() => {})` - Execute on UI thread from JS
-- `runOnJS(jsFunction)()` - Execute on JS thread from worklet
+Functions marked with 'worklet' run on UI thread. Use `runOnUI(() => {})` for UI thread execution from JS, and `runOnJS(fn)()` for JS thread execution from worklets.
 </worklets>
-
-<advanced_reference>
-For complete Reanimated API, gestures, interpolation, and performance patterns:
-→ [references/reanimated-api.md](references/reanimated-api.md)
-</advanced_reference>
 </reanimated_essentials>
 
 <convex_essentials>
@@ -455,36 +369,8 @@ export const myTasks = query({
 </authentication>
 
 <realtime_updates>
-Queries automatically update when data changes:
-
-```tsx
-function LiveTaskList() {
-  // Automatically re-renders when tasks change in database
-  const tasks = useQuery(api.tasks.list);
-
-  return <FlatList data={tasks ?? []} />;
-}
-```
-
-**Conditional queries:**
-```tsx
-function ConditionalData({ userId }: { userId?: string }) {
-  // Skip query when userId is undefined
-  const userData = useQuery(
-    api.users.get,
-    userId ? { userId } : "skip"
-  );
-
-  if (userData === undefined) return <Loading />;
-  return <UserProfile data={userData} />;
-}
-```
+Queries automatically update when data changes. Use `"skip"` to conditionally skip queries when parameters are undefined.
 </realtime_updates>
-
-<advanced_reference>
-For database patterns, file storage, pagination, optimistic updates, and search:
-→ [references/convex-patterns.md](references/convex-patterns.md)
-</advanced_reference>
 </convex_essentials>
 
 <configuration_requirements>
@@ -523,166 +409,20 @@ module.exports = config;
 </metro_config>
 
 <tailwind_config>
-**tailwind.config.js:**
-
-```javascript
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}",
-    "./src/**/*.{js,jsx,ts,tsx}",
-  ],
-  presets: [require("nativewind/preset")], // MUST BE INCLUDED
-  theme: {
-    extend: {
-      // Custom colors, spacing, etc.
-    },
-  },
-  plugins: [],
-}
-```
+**tailwind.config.js:** Must include `presets: [require("nativewind/preset")]` and content paths for `app/**`, `src/**`, and `components/**` directories.
 </tailwind_config>
-
-<complete_configuration_reference>
-For app.json, TypeScript, environment variables, and Git setup:
-→ [references/configuration.md](references/configuration.md)
-</complete_configuration_reference>
 </configuration_requirements>
 
-<common_workflows>
-<animated_list_with_backend>
-Combine Reanimated animations with Convex real-time data:
 
-```tsx
-import { useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
-import { FlatList } from 'react-native';
-import Animated, { FadeIn, Layout } from 'react-native-reanimated';
+<troubleshooting>
+**Reanimated:** Check `react-native-reanimated/plugin` is LAST in babel.config.js, clear cache with `pnpm expo start -c`
 
-function AnimatedTaskList() {
-  const tasks = useQuery(api.tasks.list);
+**NativeWind:** Verify tailwind.config.js content paths and `nativewind/babel` plugin
 
-  if (tasks === undefined) return <ActivityIndicator />;
+**Convex:** Check `EXPO_PUBLIC_CONVEX_URL` in .env, ensure `sourceExts.push('cjs')` in metro.config.js
 
-  return (
-    <FlatList
-      data={tasks}
-      keyExtractor={(item) => item._id}
-      renderItem={({ item, index }) => (
-        <Animated.View
-          entering={FadeIn.delay(index * 50)}
-          layout={Layout.springify()}
-          className="p-4 border-b border-gray-200 dark:border-gray-700"
-        >
-          <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-            {item.text}
-          </Text>
-        </Animated.View>
-      )}
-    />
-  );
-}
-```
-</animated_list_with_backend>
-
-<interactive_button_with_haptics>
-```tsx
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { Pressable } from 'react-native';
-import * as Haptics from 'expo-haptics';
-
-function HapticButton({ onPress, children }) {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <Pressable
-      onPressIn={() => {
-        scale.value = withSpring(0.95);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1);
-      }}
-      onPress={onPress}
-    >
-      <Animated.View style={animatedStyle} className="bg-blue-500 px-6 py-3 rounded-lg">
-        {children}
-      </Animated.View>
-    </Pressable>
-  );
-}
-```
-</interactive_button_with_haptics>
-
-<scroll_animations>
-```tsx
-import { useAnimatedScrollHandler } from 'react-native-reanimated';
-import Animated, { useSharedValue, useAnimatedStyle, interpolate } from 'react-native-reanimated';
-
-function ScrollAnimations() {
-  const scrollY = useSharedValue(0);
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
-
-  const headerStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(scrollY.value, [0, 100], [1, 0]);
-    return { opacity };
-  });
-
-  return (
-    <>
-      <Animated.View style={headerStyle} className="absolute top-0 left-0 right-0 z-10">
-        <Text>Fades out on scroll</Text>
-      </Animated.View>
-      <Animated.ScrollView onScroll={scrollHandler} scrollEventThrottle={16}>
-        {/* content */}
-      </Animated.ScrollView>
-    </>
-  );
-}
-```
-</scroll_animations>
-</common_workflows>
-
-<troubleshooting_quick_reference>
-<common_issues>
-**Reanimated not working:**
-1. Check `react-native-reanimated/plugin` is LAST in babel.config.js
-2. Clear cache: `pnpm expo start -c`
-3. Rebuild: `pnpm expo prebuild --clean`
-
-**NativeWind styles not applying:**
-1. Verify tailwind.config.js content paths include your files
-2. Check `nativewind/babel` is in babel.config.js
-3. Restart Metro: `pnpm expo start -c`
-
-**Convex connection issues:**
-1. Verify `EXPO_PUBLIC_CONVEX_URL` in .env
-2. Ensure `sourceExts.push('cjs')` in metro.config.js
-3. Check ConvexProvider wraps your app
-4. Run `pnpm convex dev`
-
-**pnpm dependency conflicts:**
-```bash
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
-```
-</common_issues>
-
-<complete_troubleshooting_guide>
-For detailed error messages, debugging tips, and solutions:
-→ [references/troubleshooting.md](references/troubleshooting.md)
-</complete_troubleshooting_guide>
-</troubleshooting_quick_reference>
+**Dependencies:** `rm -rf node_modules pnpm-lock.yaml && pnpm install`
+</troubleshooting>
 
 <performance_best_practices>
 1. **Use worklets for animations** - Keep heavy calculations on UI thread
@@ -711,15 +451,12 @@ You've successfully implemented this stack when:
 
 <reference_documentation>
 **Detailed guides:**
-- [NativeWind API Reference](references/nativewind-api.md) - Complete utility class reference, custom theming
-- [Reanimated API Reference](references/reanimated-api.md) - Hooks, gestures, interpolation, easing
-- [Convex Patterns](references/convex-patterns.md) - Database, auth, file storage, optimization
-- [Configuration Reference](references/configuration.md) - Babel, Metro, Tailwind, TypeScript, env vars
-- [Troubleshooting Guide](references/troubleshooting.md) - Common errors and solutions
+- [NativeWind API](references/nativewind-api.md) - Complete utility classes, custom theming, platform modifiers
+- [Reanimated API](references/reanimated-api.md) - Hooks, gestures, interpolation, easing functions
+- [Convex Patterns](references/convex-patterns.md) - Database optimization, auth, file storage, pagination
+- [Configuration](references/configuration.md) - Babel, Metro, Tailwind, TypeScript, environment variables
+- [Troubleshooting](references/troubleshooting.md) - Detailed error messages and solutions
+- [Common Workflows](references/workflows.md) - Animated lists, haptic buttons, scroll animations
 
-**Official documentation:**
-- Expo: https://docs.expo.dev
-- NativeWind: https://www.nativewind.dev
-- Reanimated: https://docs.swmansion.com/react-native-reanimated
-- Convex: https://docs.convex.dev
+**Official docs:** [Expo](https://docs.expo.dev) | [NativeWind](https://www.nativewind.dev) | [Reanimated](https://docs.swmansion.com/react-native-reanimated) | [Convex](https://docs.convex.dev)
 </reference_documentation>
