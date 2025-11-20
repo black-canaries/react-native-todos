@@ -119,20 +119,16 @@ export default function TodayScreen() {
   const renderTask = ({ item, drag, isActive }: RenderItemParams<Task>) => {
     return (
       <ScaleDecorator>
-        <TouchableOpacity
+        <TaskItem
+          task={item}
+          onToggle={handleToggleTask}
+          onPress={handleTaskPress}
           onLongPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             drag();
           }}
-          disabled={isActive}
-          className={isActive ? 'opacity-70' : ''}
-        >
-          <TaskItem
-            task={item}
-            onToggle={handleToggleTask}
-            onPress={handleTaskPress}
-          />
-        </TouchableOpacity>
+          isActive={isActive}
+        />
       </ScaleDecorator>
     );
   };

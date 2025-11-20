@@ -9,9 +9,11 @@ interface TaskItemProps {
   task: Task;
   onToggle: (taskId: string) => void;
   onPress: (task: Task) => void;
+  onLongPress?: () => void;
+  isActive?: boolean;
 }
 
-export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress }) => {
+export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress, onLongPress, isActive }) => {
   const getPriorityColor = (priority: number) => {
     switch (priority) {
       case 1:
@@ -35,8 +37,10 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onPress }) =
     <TouchableOpacity
       className={`bg-background-secondary px-md py-sm mx-md my-xs border border-border rounded-md ${
         task.completed ? 'opacity-50' : ''
-      }`}
+      } ${isActive ? 'opacity-70' : ''}`}
       onPress={() => onPress(task)}
+      onLongPress={onLongPress}
+      disabled={isActive}
       activeOpacity={0.7}
     >
       <View className="flex-row items-start">
