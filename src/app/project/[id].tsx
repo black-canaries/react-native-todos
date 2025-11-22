@@ -175,7 +175,7 @@ export default function ProjectDetailScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               handleTaskReorder(data);
             }}
-            contentContainerStyle={{ paddingBottom: 96 }}
+            contentContainerStyle={{ paddingBottom: 96, paddingTop: 16 }}
             ListFooterComponent={
               <View>
                 {/* Completed Tasks Section */}

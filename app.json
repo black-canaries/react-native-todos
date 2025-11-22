@@ -15,7 +15,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.todoist.clone"
+      "bundleIdentifier": "com.todoist.clone",
+      "deploymentTarget": "18.0"
     },
     "android": {
       "package": "com.todoist.clone"
@@ -24,7 +25,15 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      "expo-dev-client"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3ac0a83c-64f6-4fd5-ae18-ddf8c8ce7239"
+      }
+    },
+    "owner": "black-canaries"
   }
 }

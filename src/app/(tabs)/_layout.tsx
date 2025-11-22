@@ -1,64 +1,29 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../theme';
+import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
 
 export default function TabLayout() {
+  const today = new Date().getDate();
+
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: theme.colors.backgroundSecondary,
-          borderTopColor: theme.colors.border,
-          borderTopWidth: 1,
-          height: 80,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        headerStyle: {
-          backgroundColor: theme.colors.backgroundSecondary,
-        },
-        headerTintColor: theme.colors.text,
-        headerShadowVisible: false,
-      }}
-    >
-      <Tabs.Screen
-        name="today"
-        options={{
-          title: 'Today',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="today" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="upcoming"
-        options={{
-          title: 'Upcoming',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="browse"
-        options={{
-          title: 'Browse',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="menu" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Inbox',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="mail" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+    <NativeTabs>
+      <NativeTabs.Trigger name='today'>
+        <Label>Today</Label>
+        <Icon sf={`${today}.calendar`} />
+      </NativeTabs.Trigger>
+      
+      <NativeTabs.Trigger name='upcoming'>
+        <Label>Upcoming</Label>
+        <Icon sf="calendar.badge.clock" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name='browse'>
+        <Label>Browse</Label>
+        <Icon sf="list.bullet" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name='(inbox)'>
+        <Label>Inbox</Label>
+        <Icon sf="tray" />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

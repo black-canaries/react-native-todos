@@ -11,13 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import BottomSheet, { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { TaskItem } from '../../components/TaskItem';
-import { CreateTaskBottomSheet } from '../../components/CreateTaskBottomSheet';
-import { Task } from '../../types';
-import { useUpcomingTasks, useTaskMutations, useAllProjects } from '../../hooks';
-import { convexTasksToTasks } from '../../utils/convexAdapter';
-import { formatDueDate, isToday, isTomorrow } from '../../utils/dateUtils';
-import { theme } from '../../theme';
+import { TaskItem } from '../../../components/TaskItem';
+import { CreateTaskBottomSheet } from '../../../components/CreateTaskBottomSheet';
+import { Task } from '../../../types';
+import { useUpcomingTasks, useTaskMutations, useAllProjects } from '../../../hooks';
+import { convexTasksToTasks } from '../../../utils/convexAdapter';
+import { formatDueDate, isToday, isTomorrow } from '../../../utils/dateUtils';
+import { theme } from '../../../theme';
 
 interface TaskSection {
   title: string;
@@ -128,14 +128,14 @@ export default function UpcomingScreen() {
   // Show loading state while data is being fetched
   if (upcomingTasksData === undefined) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background">
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}

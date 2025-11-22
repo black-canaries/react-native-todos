@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useCallback, useLayoutEffect } from 'react';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,15 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import { useAllProjects, useAllTasks, useProjectMutations } from '../../hooks';
-import { theme } from '../../theme';
+import { useAllProjects, useAllTasks, useProjectMutations } from '../../../hooks';
+import { theme } from '../../../theme';
 
 export default function BrowseScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const projectsData = useAllProjects();
   const tasksData = useAllTasks();
   const { createProject } = useProjectMutations();
@@ -28,31 +27,6 @@ export default function BrowseScreen() {
   const [selectedColor, setSelectedColor] = useState(theme.colors.projectColors[0]);
   const [expandedFavorites, setExpandedFavorites] = useState(true);
   const [expandedMyProjects, setExpandedMyProjects] = useState(true);
-
-  // Configure header with user info on left and icons on right
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: '',
-      headerLeft: () => (
-        <View className="flex-row items-center gap-md pl-md">
-          <View className="w-10 h-10 rounded-full bg-primary items-center justify-center border-2 border-primary">
-            <Text className="text-white font-bold text-sm">J</Text>
-          </View>
-          <Text className="text-lg font-semibold text-text">Jonathan</Text>
-        </View>
-      ),
-      headerRight: () => (
-        <View className="flex-row items-center gap-md pr-md">
-          <TouchableOpacity>
-            <Ionicons name="notifications-outline" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Ionicons name="settings-outline" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-        </View>
-      ),
-    });
-  }, [navigation]);
 
   // Open/close handlers for BottomSheetModal
   const openModal = useCallback(() => {
@@ -142,7 +116,7 @@ export default function BrowseScreen() {
   // Show loading state while data is being fetched
   if (projectsData === undefined || tasksData === undefined) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
@@ -152,11 +126,11 @@ export default function BrowseScreen() {
   const otherProjects = projects.filter(p => !p.isFavorite);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView className="flex-1 flex-row justify-items-start bg-background">
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ paddingBottom: 48 }}>
 
         {/* Search and Filters sections */}
-        <View className="mt-md mx-md bg-background-secondary/50 rounded-lg">
+        <View className="mt-16 mx-md bg-background-secondary/50 rounded-lg">
           <TouchableOpacity onPress={handleInboxPress} className="flex-row items-center justify-between px-md py-sm">
             <View className="flex-row items-center gap-md">
               <Ionicons name="search" size={28} color={theme.colors.primary} />
