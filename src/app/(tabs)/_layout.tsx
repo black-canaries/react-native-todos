@@ -7,7 +7,7 @@ export default function TabLayout() {
     <NativeTabs>
       <NativeTabs.Trigger name='today'>
         <Label>Today</Label>
-        <Icon sf={`${today}.calendar`} />
+        <Icon sf={`${today}.calendar` as any} />
       </NativeTabs.Trigger>
       
       <NativeTabs.Trigger name='upcoming'>
