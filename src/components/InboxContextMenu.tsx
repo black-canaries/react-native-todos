@@ -22,7 +22,7 @@ export function InboxContextMenu({
   onAddSection,
 }: InboxContextMenuProps) {
   return (
-    <Host style={{ width: 40, height: 40 }}>
+    <Host>
       <ContextMenu>
         <ContextMenu.Items>
           {/* Show/Hide Completed Tasks Toggle */}

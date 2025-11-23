@@ -1,27 +1,21 @@
 import { Stack } from 'expo-router';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../../theme';
+import { theme } from '../../theme';
 
-export default function UpcomingLayout() {
+export default function ProjectDetailsLayout() {
   return (
     <Stack
       screenOptions={{
-        headerTitle: "Upcoming",
         headerShadowVisible: false,
-        headerTransparent: true
+        headerTransparent: true,
+        headerBackButtonDisplayMode: 'minimal'
       }}
     >
       <Stack.Screen
-        name="index"
+        name="[id]"
         options={{
-          headerTitle: () => (
-            <View>
-              <Text style={{ fontSize: 20, fontWeight: '500', color: theme.colors.text, textAlign: 'center' }}>
-                Upcoming
-              </Text>
-            </View>
-          ),
+          headerTitle: '',
           headerRight: () => (
             <View className="flex-row items-center gap-md px-md">
               <TouchableOpacity>

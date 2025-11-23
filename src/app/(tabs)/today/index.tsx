@@ -28,6 +28,7 @@ export default function TodayScreen() {
 
   // Helper to bulk reorder tasks after drag & drop
   const handleTaskReorder = async (reorderedTasks: Task[]) => {
+    console.log('[TODAY] handleTaskReorder called with', reorderedTasks.length, 'tasks');
     try {
       const convexTasks = reorderedTasks
         .map((task, index) => ({
@@ -36,11 +37,13 @@ export default function TodayScreen() {
         }))
         .filter((t): t is { id: string; newOrder: number } => !!t.id);
 
+      console.log('[TODAY] Sending bulk reorder for', convexTasks.length, 'tasks');
       if (convexTasks.length > 0) {
         await bulkReorderTasks({ tasks: convexTasks as any });
+        console.log('[TODAY] Bulk reorder completed successfully');
       }
     } catch (error) {
-      console.error('Failed to reorder tasks:', error);
+      console.error('[TODAY] Failed to reorder tasks:', error);
     }
   };
   const projectsData = useAllProjects();
@@ -119,20 +122,17 @@ export default function TodayScreen() {
   const renderTask = ({ item, drag, isActive }: RenderItemParams<Task>) => {
     return (
       <ScaleDecorator>
-        <TouchableOpacity
+        <TaskItem
+          task={item}
+          onToggle={handleToggleTask}
+          onPress={handleTaskPress}
           onLongPress={() => {
+            console.log('[TODAY] Long press detected on task:', item.title);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             drag();
+            console.log('[TODAY] Drag initiated');
           }}
-          disabled={isActive}
-          className={isActive ? 'opacity-70' : ''}
-        >
-          <TaskItem
-            task={item}
-            onToggle={handleToggleTask}
-            onPress={handleTaskPress}
-          />
-        </TouchableOpacity>
+        />
       </ScaleDecorator>
     );
   };
@@ -153,10 +153,12 @@ export default function TodayScreen() {
         renderItem={renderTask}
         keyExtractor={(item) => item.id}
         onDragEnd={({ data }) => {
+          console.log('[TODAY] onDragEnd triggered with', data.length, 'tasks');
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           handleTaskReorder(data);
         }}
-        contentContainerStyle={{ paddingBottom: 96 }}
+        activationDistance={10}
+        contentContainerStyle={{ paddingBottom: 96, paddingTop: 64 }}
         ListEmptyComponent={
           activeTasks.length === 0 && completedTasks.length === 0 ? (
             <View className="items-center justify-center py-xxl px-md">

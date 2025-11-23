@@ -135,11 +135,11 @@ export default function UpcomingScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 flex-row items-start justify-items-start bg-background">
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 96 }}
+        contentContainerStyle={{ paddingBottom: 96, paddingTop: 68 }}
         renderItem={({ item }) => (
           <TaskItem
             task={item}
@@ -148,7 +148,7 @@ export default function UpcomingScreen() {
           />
         )}
         renderSectionHeader={({ section: { title, data } }) => (
-          <View className="flex-row justify-between items-center bg-background px-md py-md pt-lg mb-4 border-b border-border">
+          <View className="flex-row justify-between items-center bg-background mx-md py-md pt-lg mb-4 border-b border-border">
             <Text className="text-lg font-semibold text-text">{title}</Text>
             <Text className="text-md font-semibold text-text-secondary">{data.length}</Text>
           </View>
@@ -186,7 +186,7 @@ export default function UpcomingScreen() {
             {/* Add Task Button */}
             <TouchableOpacity
               onPress={() => setShowCreateSheet(true)}
-              className="mx-md mt-lg mb-lg bg-background-secondary rounded-lg py-md px-md flex-row items-center gap-md"
+              className="mx-md mt-1 mb-lg bg-background-secondary rounded-lg py-md px-md flex-row items-center gap-md"
             >
               <Ionicons name="add" size={24} color={theme.colors.primary} />
               <Text className="text-text font-semibold text-md">Add Task</Text>

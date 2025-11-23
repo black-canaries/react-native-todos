@@ -100,13 +100,13 @@ export default function BrowseScreen() {
       <TouchableOpacity
         key={project._id}
         onPress={onPress}
-        className="flex-row items-center justify-between px-md py-sm"
+        className="flex-row items-center justify-between px-md py-sm pb-1"
       >
-        <View className="flex-row items-center gap-md flex-1">
+        <View className="flex-row items-center gap-md flex-1 border-b border-gray-700 pb-3">
           <Text style={{ color: projectColor }} className="text-xl font-semibold">
             #
           </Text>
-          <Text className="text-lg font-semibold text-text">{project.name}</Text>
+          <Text className="text-md font-normal text-text">{project.name}</Text>
         </View>
         <Text className="text-sm text-text-secondary">{taskCount}</Text>
       </TouchableOpacity>
@@ -127,21 +127,21 @@ export default function BrowseScreen() {
 
   return (
     <SafeAreaView className="flex-1 flex-row justify-items-start bg-background">
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ paddingBottom: 48 }}>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ paddingBottom: 48, paddingTop: 16 }}>
 
         {/* Search and Filters sections */}
-        <View className="mt-16 mx-md bg-background-secondary/50 rounded-lg">
-          <TouchableOpacity onPress={handleInboxPress} className="flex-row items-center justify-between px-md py-sm">
-            <View className="flex-row items-center gap-md">
-              <Ionicons name="search" size={28} color={theme.colors.primary} />
-              <Text className="text-lg font-semibold text-text">Search</Text>
+        <View className="mx-md bg-background-secondary rounded-lg">
+          <TouchableOpacity onPress={handleInboxPress} className="flex-row items-center justify-between px-md py-md">
+            <View className="flex-row items-center gap-md pb-3 border-b border-gray-700 w-full">
+              <Ionicons name="search" size={24} color={theme.colors.primary} />
+              <Text className="text-md font-semibold text-text">Search</Text>
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row items-center justify-between px-md py-sm">
-            <View className="flex-row items-center gap-md">
-              <Ionicons name="apps" size={28} color={theme.colors.primary} />
-              <Text className="text-lg font-semibold text-text">Filters & Labels</Text>
+          <TouchableOpacity className="flex-row items-center justify-between px-md">
+            <View className="flex-row items-center gap-md pb-3">
+              <Ionicons name="grid-outline" size={22} color={theme.colors.primary} />
+              <Text className="text-md font-semibold text-text">Filters & Labels</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -153,7 +153,7 @@ export default function BrowseScreen() {
               onPress={() => setExpandedFavorites(!expandedFavorites)}
               className="flex-row items-center justify-between px-md py-md"
             >
-              <Text className="text-xl font-semibold text-text">Favorites</Text>
+              <Text className="text-lg font-semibold text-text">Favorites</Text>
               <Ionicons
                 name={expandedFavorites ? 'chevron-down' : 'chevron-forward'}
                 size={24}
@@ -161,7 +161,7 @@ export default function BrowseScreen() {
               />
             </TouchableOpacity>
             {expandedFavorites && (
-              <View className="bg-background-secondary/50 rounded-lg">
+              <View className="bg-background-secondary rounded-lg">
                 {favoriteProjects.map(project =>
                   renderProjectItem(project, () => handleProjectPress(project._id))
                 )}
@@ -177,7 +177,7 @@ export default function BrowseScreen() {
               onPress={() => setExpandedMyProjects(!expandedMyProjects)}
               className="flex-row items-center flex-1 gap-sm"
             >
-              <Text className="text-xl font-semibold text-text">My Projects</Text>
+              <Text className="text-lg font-semibold text-text">Projects</Text>
               <Ionicons name="chevron-forward" size={16} color={theme.colors.textSecondary} />
             </TouchableOpacity>
             <TouchableOpacity
@@ -195,7 +195,7 @@ export default function BrowseScreen() {
             </TouchableOpacity>
           </View>
           {expandedMyProjects && (
-            <View className="bg-background-secondary/50 rounded-lg">
+            <View className="bg-background-secondary rounded-lg">
               {otherProjects.map(project =>
                 renderProjectItem(project, () => handleProjectPress(project._id))
               )}

@@ -5,6 +5,11 @@ export default function TabLayout() {
 
   return (
     <NativeTabs>
+      <NativeTabs.Trigger name='browse'>
+        <Label>Browse</Label>
+        <Icon sf="list.bullet" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name='today'>
         <Label>Today</Label>
         <Icon sf={`${today}.calendar` as any} />
@@ -13,11 +18,6 @@ export default function TabLayout() {
       <NativeTabs.Trigger name='upcoming'>
         <Label>Upcoming</Label>
         <Icon sf="calendar.badge.clock" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name='browse'>
-        <Label>Browse</Label>
-        <Icon sf="list.bullet" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name='(inbox)'>

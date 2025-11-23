@@ -31,6 +31,7 @@ export default function InboxScreen() {
 
   // Helper to bulk reorder tasks after drag & drop
   const handleTaskReorder = async (reorderedTasks: Task[]) => {
+    console.log('[INBOX] handleTaskReorder called with', reorderedTasks.length, 'tasks');
     try {
       const convexTasks = reorderedTasks
         .map((task, index) => ({
@@ -39,11 +40,13 @@ export default function InboxScreen() {
         }))
         .filter((t): t is { id: string; newOrder: number } => !!t.id);
 
+      console.log('[INBOX] Sending bulk reorder for', convexTasks.length, 'tasks');
       if (convexTasks.length > 0) {
         await bulkReorderTasks({ tasks: convexTasks as any });
+        console.log('[INBOX] Bulk reorder completed successfully');
       }
     } catch (error) {
-      console.error('Failed to reorder tasks:', error);
+      console.error('[INBOX] Failed to reorder tasks:', error);
     }
   };
 
@@ -104,20 +107,17 @@ export default function InboxScreen() {
   const renderTask = ({ item, drag, isActive }: RenderItemParams<Task>) => {
     return (
       <ScaleDecorator>
-        <TouchableOpacity
+        <TaskItem
+          task={item}
+          onToggle={handleToggleTask}
+          onPress={handleTaskPress}
           onLongPress={() => {
+            console.log('[INBOX] Long press detected on task:', item.title);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             drag();
+            console.log('[INBOX] Drag initiated');
           }}
-          disabled={isActive}
-          className={isActive ? 'opacity-70' : ''}
-        >
-          <TaskItem
-            task={item}
-            onToggle={handleToggleTask}
-            onPress={handleTaskPress}
-          />
-        </TouchableOpacity>
+        />
       </ScaleDecorator>
     );
   };
@@ -138,10 +138,12 @@ export default function InboxScreen() {
         renderItem={renderTask}
         keyExtractor={(item) => item.id}
         onDragEnd={({ data }) => {
+          console.log('[INBOX] onDragEnd triggered with', data.length, 'tasks');
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           handleTaskReorder(data);
         }}
-        contentContainerStyle={{ paddingBottom: 96, paddingTop: 16 }}
+        activationDistance={10}
+        contentContainerStyle={{ paddingBottom: 96, paddingTop: 68 }}
         ListEmptyComponent={
           activeTasks.length === 0 && completedTasks.length === 0 ? (
             <View className="items-center justify-center py-xxl px-md">
@@ -176,7 +178,7 @@ export default function InboxScreen() {
             {/* Add Task Button */}
             <TouchableOpacity
               onPress={() => setShowCreateSheet(true)}
-              className="mx-md mt-lg mb-lg bg-background-secondary rounded-lg py-md px-md flex-row items-center gap-md"
+              className="mx-md mt-1 mb-lg bg-background-secondary rounded-lg py-md px-md flex-row items-center gap-md"
             >
               <Ionicons name="add" size={24} color={theme.colors.primary} />
               <Text className="text-text font-semibold text-md">Add Task</Text>

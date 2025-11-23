@@ -10,7 +10,8 @@
       "Bash(timeout 20 pnpm start)",
       "Bash(kill:*)",
       "Skill(expo-ui)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(pnpm list:*)"
     ],
     "deny": [],
     "ask": []

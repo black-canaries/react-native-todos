@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -88,6 +88,7 @@ export default function ProjectDetailScreen() {
   };
 
   const handleTaskReorder = async (reorderedTasks: Task[]) => {
+    console.log('[PROJECT] handleTaskReorder called with', reorderedTasks.length, 'tasks');
     try {
       const convexTasks = reorderedTasks
         .map((task, index) => ({
@@ -96,31 +97,30 @@ export default function ProjectDetailScreen() {
         }))
         .filter((t): t is { id: string; newOrder: number } => !!t.id);
 
+      console.log('[PROJECT] Sending bulk reorder for', convexTasks.length, 'tasks');
       if (convexTasks.length > 0) {
         await bulkReorderTasks({ tasks: convexTasks as any });
+        console.log('[PROJECT] Bulk reorder completed successfully');
       }
     } catch (error) {
-      console.error('Failed to reorder tasks:', error);
+      console.error('[PROJECT] Failed to reorder tasks:', error);
     }
   };
 
   const renderTask = ({ item, drag, isActive }: RenderItemParams<Task>) => {
     return (
       <ScaleDecorator>
-        <TouchableOpacity
+        <TaskItem
+          task={item}
+          onToggle={handleTaskToggle}
+          onPress={handleTaskPress}
           onLongPress={() => {
+            console.log('[PROJECT] Long press detected on task:', item.title);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             drag();
+            console.log('[PROJECT] Drag initiated');
           }}
-          disabled={isActive}
-          className={isActive ? 'opacity-70' : ''}
-        >
-          <TaskItem
-            task={item}
-            onToggle={handleTaskToggle}
-            onPress={handleTaskPress}
-          />
-        </TouchableOpacity>
+        />
       </ScaleDecorator>
     );
   };
@@ -156,10 +156,10 @@ export default function ProjectDetailScreen() {
           <Ionicons name="chevron-back" size={28} color={theme.colors.text} />
         </TouchableOpacity>
         <View className="flex-1 flex-row items-center justify-center">
-          <View
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: projectData.color }}
-          />
+          <Text
+            className="font-bold text-xl"
+            style={{ color: projectData.color }}
+          >#</Text>
           <Text className="text-lg text-text ml-sm">{projectData.name}</Text>
         </View>
         <View className="w-7" />
@@ -172,9 +172,11 @@ export default function ProjectDetailScreen() {
             renderItem={renderTask}
             keyExtractor={(item) => item.id}
             onDragEnd={({ data }) => {
+              console.log('[PROJECT] onDragEnd triggered with', data.length, 'tasks');
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               handleTaskReorder(data);
             }}
+            activationDistance={10}
             contentContainerStyle={{ paddingBottom: 96, paddingTop: 16 }}
             ListFooterComponent={
               <View>
@@ -193,7 +195,7 @@ export default function ProjectDetailScreen() {
                 {/* Add Task Button */}
                 <TouchableOpacity
                   onPress={() => setShowCreateSheet(true)}
-                  className="mx-md mt-lg mb-lg bg-background-secondary rounded-lg py-md px-md flex-row items-center gap-md"
+                  className="mx-md mt-1 mb-lg bg-background-secondary rounded-lg py-md px-md flex-row items-center gap-md"
                 >
                   <Ionicons name="add" size={24} color={theme.colors.primary} />
                   <Text className="text-text font-semibold text-md">Add Task</Text>
