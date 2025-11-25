@@ -110,50 +110,53 @@ export default function AIScreen() {
           presentation: 'fullScreenModal',
         }}
       />
-      <SafeAreaView edges={['bottom']} className="flex-1 bg-background">
-        {/* Messages List */}
-        <View className="flex-1">
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={renderMessage}
-            keyExtractor={keyExtractor}
-            contentContainerStyle={{
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: 16,
-              flexGrow: 1,
-            }}
-            ListEmptyComponent={renderEmpty}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-
-        {/* Error Display */}
-        {error && (
-          <View className="px-lg pb-sm">
-            <View className="flex-row items-center gap-md bg-red-900/20 rounded-2xl px-lg py-md">
-              <Ionicons name="alert-circle" size={20} color="#ef4444" />
-              <Text className="text-md text-red-400 flex-1">{error}</Text>
-            </View>
+      <KeyboardAvoidingView
+        className="flex-1 bg-background"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      >
+        <SafeAreaView edges={['bottom']} className="flex-1">
+          {/* Messages List */}
+          <View className="flex-1">
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              renderItem={renderMessage}
+              keyExtractor={keyExtractor}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingTop: 16,
+                paddingBottom: 16,
+                flexGrow: 1,
+              }}
+              ListEmptyComponent={renderEmpty}
+              showsVerticalScrollIndicator={false}
+              keyboardDismissMode="interactive"
+              keyboardShouldPersistTaps="handled"
+            />
           </View>
-        )}
 
-        {/* Loading Indicator */}
-        {isSending && (
-          <View className="px-lg pb-sm">
-            <View className="flex-row items-center gap-md bg-background-secondary rounded-2xl px-lg py-md max-w-[50%]">
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-              <Text className="text-md text-text-secondary">Thinking...</Text>
+          {/* Error Display */}
+          {error && (
+            <View className="px-lg pb-sm">
+              <View className="flex-row items-center gap-md bg-red-900/20 rounded-2xl px-lg py-md">
+                <Ionicons name="alert-circle" size={20} color="#ef4444" />
+                <Text className="text-md text-red-400 flex-1">{error}</Text>
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
-        {/* Input Area */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
-        >
+          {/* Loading Indicator */}
+          {isSending && (
+            <View className="px-lg pb-sm">
+              <View className="flex-row items-center gap-md bg-background-secondary rounded-2xl px-lg py-md max-w-[50%]">
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text className="text-md text-text-secondary">Thinking...</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Input Area */}
           <View className="px-lg py-md border-t border-border bg-background">
             <View className="flex-row items-center gap-sm">
               <View className="flex-1 bg-background-secondary rounded-full px-lg py-sm border border-border">
@@ -169,6 +172,8 @@ export default function AIScreen() {
                   editable={!isSending}
                   onSubmitEditing={handleSendMessage}
                   blurOnSubmit={false}
+                  submitBehavior="submit"
+                  returnKeyType="send"
                 />
               </View>
               <TouchableOpacity
@@ -192,8 +197,8 @@ export default function AIScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </>
   );
 }
