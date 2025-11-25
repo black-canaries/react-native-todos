@@ -22,7 +22,7 @@ export default function TabLayout() {
         <Icon sf={`${today}.calendar` as any} />
         <Label>Today</Label>
       </NativeTabs.Trigger>
-      
+
       <NativeTabs.Trigger name='upcoming'>
         <Icon sf="calendar.badge.clock" />
         <Label>Upcoming</Label>
@@ -31,6 +31,11 @@ export default function TabLayout() {
       <NativeTabs.Trigger name='inbox'>
         <Icon sf="tray" />
         <Label>Inbox</Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name='ai'>
+        <Icon sf="sparkles" />
+        <Label>AI</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

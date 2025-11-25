@@ -44,4 +44,31 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_creation", ["createdAt"]),
+
+  chatSessions: defineTable({
+    userId: v.optional(v.string()),
+    title: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_creation", ["createdAt"])
+    .index("by_user", ["userId"]),
+
+  chatMessages: defineTable({
+    sessionId: v.id("chatSessions"),
+    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system")),
+    content: v.string(),
+    toolCalls: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          arguments: v.string(),
+          result: v.optional(v.string()),
+        })
+      )
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_creation", ["createdAt"]),
 });

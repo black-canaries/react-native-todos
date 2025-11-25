@@ -8,6 +8,11 @@
  * @module
  */
 
+import type * as ai_agent from "../ai/agent.js";
+import type * as ai_chat from "../ai/chat.js";
+import type * as ai_mutations from "../ai/mutations.js";
+import type * as ai_queries from "../ai/queries.js";
+import type * as ai_tools from "../ai/tools.js";
 import type * as init from "../init.js";
 import type * as labelsMutation from "../labelsMutation.js";
 import type * as labelsQuery from "../labelsQuery.js";
@@ -23,6 +28,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/agent": typeof ai_agent;
+  "ai/chat": typeof ai_chat;
+  "ai/mutations": typeof ai_mutations;
+  "ai/queries": typeof ai_queries;
+  "ai/tools": typeof ai_tools;
   init: typeof init;
   labelsMutation: typeof labelsMutation;
   labelsQuery: typeof labelsQuery;

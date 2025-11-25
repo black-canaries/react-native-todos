@@ -23,6 +23,14 @@ export default function RootLayout() {
             <StatusBar style="light" />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="ai-chat"
+                options={{
+                  presentation: 'fullScreenModal',
+                  headerShown: true,
+                  animation: 'slide_from_bottom',
+                }}
+              />
             </Stack>
           </BottomSheetModalProvider>
         </GestureHandlerRootView>

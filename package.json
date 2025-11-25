@@ -21,6 +21,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.0",
+    "@convex-dev/agent": "^0.3.0",
     "@expo/metro-runtime": "^6.1.2",
     "@expo/ui": "0.2.0-beta.7",
     "@expo/vector-icons": "^15.0.3",
@@ -39,6 +41,7 @@
     "expo-router": "~6.0.14",
     "expo-status-bar": "~3.0.8",
     "nativewind": "^4.2.1",
+    "openai": "^6.9.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
