@@ -11,7 +11,8 @@
       "Bash(kill:*)",
       "Skill(expo-ui)",
       "Bash(ls:*)",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "WebFetch(domain:docs.expo.dev)"
     ],
     "deny": [],
     "ask": []

@@ -1,23 +1,24 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useLayoutEffect } from 'react';
 import { View, Text, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DraggableFlatList, {
   ScaleDecorator,
   RenderItemParams,
 } from 'react-native-draggable-flatlist';
 import * as Haptics from 'expo-haptics';
-import { TaskItem } from '../../components/TaskItem';
-import { EditTaskBottomSheet } from '../../components/EditTaskBottomSheet';
-import { CreateTaskBottomSheet } from '../../components/CreateTaskBottomSheet';
-import { Task } from '../../types';
-import { useProject, useProjectTasks, useTaskMutations } from '../../hooks';
-import { convexTasksToTasks } from '../../utils/convexAdapter';
-import { theme } from '../../theme';
+import { TaskItem } from '../../../components/TaskItem';
+import { EditTaskBottomSheet } from '../../../components/EditTaskBottomSheet';
+import { CreateTaskBottomSheet } from '../../../components/CreateTaskBottomSheet';
+import { Task } from '../../../types';
+import { useProject, useProjectTasks, useTaskMutations } from '../../../hooks';
+import { convexTasksToTasks } from '../../../utils/convexAdapter';
+import { theme } from '../../../theme';
 
 export default function ProjectDetailScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const projectData = useProject(id);
@@ -26,6 +27,30 @@ export default function ProjectDetailScreen() {
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showCreateSheet, setShowCreateSheet] = useState(false);
+
+  // Set dynamic header options
+  useLayoutEffect(() => {
+    if (projectData) {
+      navigation.setOptions({
+        headerTitle: () => (
+          <View className="flex-1 flex-row items-center justify-center">
+            <Text
+              className="font-bold text-xl"
+              style={{ color: projectData.color }}
+            >
+              #
+            </Text>
+            <Text className="text-lg text-text ml-sm">{projectData.name}</Text>
+          </View>
+        ),
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => router.back()} className="pl-md">
+            <Ionicons name="chevron-back" size={28} color={theme.colors.text} />
+          </TouchableOpacity>
+        ),
+      });
+    }
+  }, [projectData, navigation, router]);
 
   // Convert Convex data to legacy format (separate active and completed)
   const { activeTasks, completedTasks } = useMemo(() => {
@@ -115,10 +140,8 @@ export default function ProjectDetailScreen() {
           onToggle={handleTaskToggle}
           onPress={handleTaskPress}
           onLongPress={() => {
-            console.log('[PROJECT] Long press detected on task:', item.title);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             drag();
-            console.log('[PROJECT] Drag initiated');
           }}
         />
       </ScaleDecorator>
@@ -128,7 +151,7 @@ export default function ProjectDetailScreen() {
   // Show loading state while data is being fetched
   if (projectData === undefined || allTasksData === undefined) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
@@ -137,34 +160,14 @@ export default function ProjectDetailScreen() {
   // Show error state if project not found
   if (!projectData) {
     return (
-      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-        <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={28} color={theme.colors.text} />
-          </TouchableOpacity>
-          <Text className="text-xxl font-bold text-text">Project Not Found</Text>
-          <View className="w-7" />
-        </View>
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top', 'left', 'right']}>
+        <Text className="text-xl font-bold text-text">Project Not Found</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="flex-row justify-between items-center px-md py-sm">
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color={theme.colors.text} />
-        </TouchableOpacity>
-        <View className="flex-1 flex-row items-center justify-center">
-          <Text
-            className="font-bold text-xl"
-            style={{ color: projectData.color }}
-          >#</Text>
-          <Text className="text-lg text-text ml-sm">{projectData.name}</Text>
-        </View>
-        <View className="w-7" />
-      </View>
-
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
       <View className="flex-1">
         {activeTasks.length > 0 || completedTasks.length > 0 ? (
           <DraggableFlatList
@@ -177,7 +180,9 @@ export default function ProjectDetailScreen() {
               handleTaskReorder(data);
             }}
             activationDistance={10}
-            contentContainerStyle={{ paddingBottom: 96, paddingTop: 16 }}
+            contentContainerStyle={{ paddingBottom: 48, paddingTop: 16 }}
+            contentInsetAdjustmentBehavior="automatic"
+            automaticallyAdjustKeyboardInsets={true}
             ListFooterComponent={
               <View>
                 {/* Completed Tasks Section */}

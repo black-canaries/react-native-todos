@@ -128,18 +128,20 @@ export default function UpcomingScreen() {
   // Show loading state while data is being fetched
   if (upcomingTasksData === undefined) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 flex-row items-start justify-items-start bg-background">
+    <SafeAreaView className="flex-1 flex-row items-start justify-items-start bg-background" edges={['top', 'left', 'right']}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 96, paddingTop: 68 }}
+        contentContainerStyle={{ paddingBottom: 48 }}
+        contentInsetAdjustmentBehavior="automatic"
+        automaticallyAdjustKeyboardInsets={true}
         renderItem={({ item }) => (
           <TaskItem
             task={item}

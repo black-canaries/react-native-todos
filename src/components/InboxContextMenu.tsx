@@ -25,10 +25,21 @@ export function InboxContextMenu({
     <Host>
       <ContextMenu>
         <ContextMenu.Items>
+          {/* Add Section */}
+          <Button
+            systemImage="distribute.vertical"
+            onPress={() => {
+              console.log('Add section pressed');
+              onAddSection();
+            }}
+          >
+            Add Section
+          </Button>
+
           {/* Show/Hide Completed Tasks Toggle */}
           <Switch
             value={showCompleted}
-            label="Show Completed Tasks"
+            label="Show Completed"
             variant="checkbox"
             onValueChange={onToggleShowCompleted}
           />
@@ -41,18 +52,7 @@ export function InboxContextMenu({
               onSelectMultipleTasks();
             }}
           >
-            Select Multiple Tasks
-          </Button>
-
-          {/* Add Section */}
-          <Button
-            systemImage="folder.badge.plus"
-            onPress={() => {
-              console.log('Add section pressed');
-              onAddSection();
-            }}
-          >
-            Add Section
+            Select Multiple
           </Button>
         </ContextMenu.Items>
 

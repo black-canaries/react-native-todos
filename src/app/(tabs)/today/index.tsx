@@ -140,14 +140,14 @@ export default function TodayScreen() {
   // Show loading state while data is being fetched
   if (todayTasksData === undefined) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
       <DraggableFlatList
         data={activeTasks}
         renderItem={renderTask}
@@ -158,7 +158,9 @@ export default function TodayScreen() {
           handleTaskReorder(data);
         }}
         activationDistance={10}
-        contentContainerStyle={{ paddingBottom: 96, paddingTop: 64 }}
+        contentContainerStyle={{ paddingBottom: 48 }}
+        contentInsetAdjustmentBehavior="automatic"
+        automaticallyAdjustKeyboardInsets={true}
         ListEmptyComponent={
           activeTasks.length === 0 && completedTasks.length === 0 ? (
             <View className="items-center justify-center py-xxl px-md">

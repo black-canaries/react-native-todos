@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { useAllProjects, useAllTasks, useProjectMutations } from '../../../hooks';
 import { theme } from '../../../theme';
+import { ListItem } from '@/components/ListItem';
 
 export default function BrowseScreen() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function BrowseScreen() {
   };
 
   const handleProjectPress = (projectId: string) => {
-    router.push(`/project/${projectId}`);
+    router.push(`/(tabs)/(projects)/${projectId}`);
   };
 
   const handleInboxPress = () => {
@@ -116,7 +117,7 @@ export default function BrowseScreen() {
   // Show loading state while data is being fetched
   if (projectsData === undefined || tasksData === undefined) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={['top', 'left', 'right']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
@@ -126,23 +127,35 @@ export default function BrowseScreen() {
   const otherProjects = projects.filter(p => !p.isFavorite);
 
   return (
-    <SafeAreaView className="flex-1 flex-row justify-items-start bg-background">
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1" contentContainerStyle={{ paddingBottom: 48, paddingTop: 16 }}>
+    <SafeAreaView className="flex-1 flex-row justify-items-start bg-background" edges={['top', 'left', 'right']}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 48 }}
+        contentInsetAdjustmentBehavior="automatic"
+        automaticallyAdjustKeyboardInsets={true}
+      >
 
         {/* Search and Filters sections */}
-        <View className="mx-md bg-background-secondary rounded-lg">
-          <TouchableOpacity onPress={handleInboxPress} className="flex-row items-center justify-between px-md py-md">
-            <View className="flex-row items-center gap-md pb-3 border-b border-gray-700 w-full">
-              <Ionicons name="search" size={24} color={theme.colors.primary} />
-              <Text className="text-md font-semibold text-text">Search</Text>
-            </View>
+        <View className="mx-md bg-background-secondary rounded-lg divide-y divide-gray-700">
+
+          <TouchableOpacity onPress={handleInboxPress} className="flex-row items-center justify-between px-md">
+            <ListItem>
+              <View className="flex-row items-center gap-md w-full">
+                <Ionicons name="search" size={24} color={theme.colors.primary} />
+                <Text className="text-md font-semibold text-text">Search</Text>
+              </View>
+            </ListItem>
           </TouchableOpacity>
 
+
           <TouchableOpacity className="flex-row items-center justify-between px-md">
-            <View className="flex-row items-center gap-md pb-3">
-              <Ionicons name="grid-outline" size={22} color={theme.colors.primary} />
-              <Text className="text-md font-semibold text-text">Filters & Labels</Text>
-            </View>
+            <ListItem isLast>
+              <View className="flex-row items-center gap-md">
+                <Ionicons name="grid-outline" size={22} color={theme.colors.primary} />
+                <Text className="text-md font-semibold text-text">Filters & Labels</Text>
+              </View>
+            </ListItem>
           </TouchableOpacity>
         </View>
 
