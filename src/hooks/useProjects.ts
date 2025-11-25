@@ -26,18 +26,20 @@ export function useProject(projectId: string | undefined) {
 }
 
 /**
- * Hook for project mutations (create, update, delete, reorder)
+ * Hook for project mutations (create, update, delete, reorder, display settings)
  */
 export function useProjectMutations() {
   const createProject = useMutation(api.projectsMutation.create);
   const updateProject = useMutation(api.projectsMutation.update);
   const deleteProject = useMutation(api.projectsMutation.delete_);
   const reorderProject = useMutation(api.projectsMutation.reorder);
+  const updateDisplaySettings = useMutation(api.projectsMutation.updateDisplaySettings);
 
   return {
     createProject,
     updateProject,
     deleteProject,
     reorderProject,
+    updateDisplaySettings,
   };
 }

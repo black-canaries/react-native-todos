@@ -7,6 +7,7 @@ export default defineSchema({
     color: v.string(),
     isFavorite: v.boolean(),
     order: v.number(),
+    showCompletedTasks: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

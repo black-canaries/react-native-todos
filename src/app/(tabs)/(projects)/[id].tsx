@@ -185,8 +185,8 @@ export default function ProjectDetailScreen() {
             automaticallyAdjustKeyboardInsets={true}
             ListFooterComponent={
               <View>
-                {/* Completed Tasks Section */}
-                {completedTasks.length > 0 && (
+                {/* Completed Tasks Section - only show if setting enabled */}
+                {(projectData?.showCompletedTasks ?? true) && completedTasks.length > 0 && (
                   completedTasks.map(task => (
                     <TaskItem
                       key={task.id}

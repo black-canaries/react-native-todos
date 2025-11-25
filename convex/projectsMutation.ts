@@ -85,3 +85,21 @@ export const reorder = mutation({
     return await ctx.db.get(id);
   },
 });
+
+export const updateDisplaySettings = mutation({
+  args: {
+    id: v.id("projects"),
+    showCompletedTasks: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { id, showCompletedTasks }) => {
+    const project = await ctx.db.get(id);
+    if (!project) throw new Error("Project not found");
+
+    await ctx.db.patch(id, {
+      ...(showCompletedTasks !== undefined && { showCompletedTasks }),
+      updatedAt: Date.now(),
+    });
+
+    return await ctx.db.get(id);
+  },
+});
