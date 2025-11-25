@@ -35,7 +35,7 @@ export interface AgentConfig {
 
 export function getAgentConfig(): AgentConfig {
   // Default to Anthropic (Claude)
-  const provider = (process.env.AI_PROVIDER as AIProvider) || "openai";
+  const provider = (process.env.AI_PROVIDER as AIProvider) || "anthropic";
 
   if (provider === "anthropic") {
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -48,7 +48,7 @@ export function getAgentConfig(): AgentConfig {
       apiKey,
     };
   } else if (provider === "openai") {
-    const apiKey = "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"; // process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error("OPENAI_API_KEY environment variable is required");
     }
