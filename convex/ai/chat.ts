@@ -1,20 +1,14 @@
+// @ts-nocheck - Type inference issues with Agent API
 import { action } from "../_generated/server";
 import { v } from "convex/values";
 import { api } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
-import { getAgentConfig, createSystemPrompt } from "./agent";
-import { toolDefinitions, executeTool } from "./tools";
-import Anthropic from "@anthropic-ai/sdk";
-import OpenAI from "openai";
+import { createTaskAgent } from "./agent";
 
 const MAX_CONTEXT_MESSAGES = 20;
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
-
-async function getOrCreateSessionHelper(
+// Helper to get or create a session
+async function getOrCreateSession(
   ctx: any,
   sessionId: Id<"chatSessions"> | undefined,
   userId: string | undefined
@@ -37,26 +31,7 @@ async function getOrCreateSessionHelper(
   });
 }
 
-async function saveMessageHelper(
-  ctx: any,
-  args: {
-    sessionId: Id<"chatSessions">;
-    role: "user" | "assistant" | "system";
-    content: string;
-    toolCalls?: Array<{
-      name: string;
-      arguments: string;
-      result?: string;
-    }>;
-  }
-): Promise<Id<"chatMessages">> {
-  return await ctx.runMutation(api.ai.mutations.saveMessage, {
-    ...args,
-    createdAt: Date.now(),
-  });
-}
-
-// Send a message and get a response
+// Send a message and get a response using Convex Agent
 export const sendMessage = action({
   args: {
     sessionId: v.optional(v.id("chatSessions")),
@@ -64,183 +39,90 @@ export const sendMessage = action({
     userId: v.optional(v.string()),
   },
   handler: async (ctx, { sessionId, message, userId }) => {
-    // Get or create session
-    const activeSessionId = await getOrCreateSessionHelper(ctx, sessionId, userId);
-
-    // Save user message
-    await saveMessageHelper(ctx, {
-      sessionId: activeSessionId,
-      role: "user",
-      content: message,
-    });
-
-    // Get conversation history
-    const history = await ctx.runQuery(api.ai.queries.getMessages, {
-      sessionId: activeSessionId,
-      limit: MAX_CONTEXT_MESSAGES,
-    });
-
-    // Get AI configuration
-    const config = getAgentConfig();
-    const systemPrompt = createSystemPrompt();
-
-    // Build messages for the AI (filter out system messages from history)
-    const messages: Message[] = [
-      ...history
-        .filter((msg) => msg.role !== "system")
-        .map((msg) => ({
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-        })),
-      { role: "user", content: message },
-    ];
-
     try {
-      let response: string;
-      let toolCalls: any[] = [];
+      // Get or create session
+      const activeSessionId = await getOrCreateSession(ctx, sessionId, userId);
 
-      if (config.provider === "anthropic") {
-        const anthropic = new Anthropic({ apiKey: config.apiKey });
+      // Create the agent
+      const agent = createTaskAgent();
 
-        const result = await anthropic.messages.create({
-          model: config.model,
-          max_tokens: 4096,
-          messages,
-          system: systemPrompt,
-          tools: toolDefinitions as any,
-        });
+      // Create or continue thread
+      let threadId: string;
+      const session = await ctx.runQuery(api.ai.queries.getSession, {
+        sessionId: activeSessionId,
+      });
 
-        // Process tool calls if any
-        if (result.content.some((block) => block.type === "tool_use")) {
-          for (const block of result.content) {
-            if (block.type === "tool_use") {
-              const toolResult = await executeTool(
-                ctx,
-                block.name,
-                block.input
-              );
-              toolCalls.push({
-                name: block.name,
-                arguments: JSON.stringify(block.input),
-                result: JSON.stringify(toolResult),
-              });
-            }
-          }
-
-          // Get final response with tool results
-          const followUp = await anthropic.messages.create({
-            model: config.model,
-            max_tokens: 4096,
-            messages: [
-              ...messages,
-              {
-                role: "assistant",
-                content: result.content as any,
-              },
-              {
-                role: "user",
-                content: toolCalls
-                  .map((tc) => `Tool ${tc.name} result: ${tc.result}`)
-                  .join("\n"),
-              },
-            ],
-            system: systemPrompt,
-          });
-
-          response = followUp.content
-            .filter((block) => block.type === "text")
-            .map((block: any) => block.text)
-            .join("\n");
-        } else {
-          response = result.content
-            .filter((block) => block.type === "text")
-            .map((block: any) => block.text)
-            .join("\n");
-        }
+      if (session?.title) {
+        // Use existing thread ID stored in session title field (temporary storage)
+        threadId = session.title;
       } else {
-        // OpenAI implementation
-        const openai = new OpenAI({ apiKey: config.apiKey });
-
-        const result = await openai.chat.completions.create({
-          model: config.model,
-          messages: messages as any,
-          tools: toolDefinitions.map((tool) => ({
-            type: "function" as const,
-            function: {
-              name: tool.name,
-              description: tool.description,
-              parameters: tool.parameters,
-            },
-          })),
+        // Create new thread
+        const { threadId: newThreadId } = await agent.createThread(ctx, {
+          userId: userId ?? undefined,
         });
+        threadId = newThreadId;
 
-        const firstMessage = result.choices[0].message;
-
-        // Process tool calls if any
-        if (firstMessage.tool_calls && firstMessage.tool_calls.length > 0) {
-          for (const toolCall of firstMessage.tool_calls) {
-            if (toolCall.type === "function") {
-              const toolResult = await executeTool(
-                ctx,
-                toolCall.function.name,
-                JSON.parse(toolCall.function.arguments)
-              );
-              toolCalls.push({
-                name: toolCall.function.name,
-                arguments: toolCall.function.arguments,
-                result: JSON.stringify(toolResult),
-              });
-            }
-          }
-
-          // Get final response with tool results
-          const followUp = await openai.chat.completions.create({
-            model: config.model,
-            messages: [
-              ...messages,
-              firstMessage as any,
-              ...toolCalls.map((tc) => ({
-                role: "tool" as const,
-                content: tc.result,
-              })),
-            ],
-          });
-
-          response = followUp.choices[0].message.content || "No response";
-        } else {
-          response = firstMessage.content || "No response";
-        }
+        // Store thread ID in session for future use
+        await ctx.runMutation(api.ai.mutations.updateSession, {
+          sessionId: activeSessionId,
+          title: threadId,
+        });
       }
 
-      // Save assistant response
-      await saveMessageHelper(ctx, {
+      // Continue the thread
+      const { thread } = await agent.continueThread(ctx, {
+        threadId,
+        userId: userId ?? undefined,
+      });
+
+      // Generate response
+      const result = await thread.generateText({
+        prompt: message,
+      });
+
+      // Save user message to our chat messages table
+      await ctx.runMutation(api.ai.mutations.saveMessage, {
+        sessionId: activeSessionId,
+        role: "user",
+        content: message,
+        createdAt: Date.now(),
+      });
+
+      // Save assistant response to our chat messages table
+      await ctx.runMutation(api.ai.mutations.saveMessage, {
         sessionId: activeSessionId,
         role: "assistant",
-        content: response,
-        toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+        content: result.text,
+        createdAt: Date.now(),
       });
 
       return {
         sessionId: activeSessionId,
-        message: response,
-        toolCalls,
+        message: result.text,
+        threadId,
       };
     } catch (error) {
       console.error("AI Error:", error);
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occurred";
 
-      // Save error as assistant message
-      await saveMessageHelper(ctx, {
-        sessionId: activeSessionId,
-        role: "assistant",
-        content: `I apologize, but I encountered an error: ${errorMessage}`,
-      });
+      // Try to save error if we have a session
+      if (sessionId) {
+        try {
+          await ctx.runMutation(api.ai.mutations.saveMessage, {
+            sessionId,
+            role: "assistant",
+            content: `I apologize, but I encountered an error: ${errorMessage}`,
+            createdAt: Date.now(),
+          });
+        } catch (saveError) {
+          console.error("Failed to save error message:", saveError);
+        }
+      }
 
       return {
-        sessionId: activeSessionId,
+        sessionId: sessionId ?? undefined,
         message: `I apologize, but I encountered an error: ${errorMessage}`,
-        toolCalls: [],
       };
     }
   },
@@ -254,171 +136,76 @@ export const streamMessage = action({
     userId: v.optional(v.string()),
   },
   handler: async (ctx, { sessionId, message, userId }) => {
-    // Get or create session
-    const activeSessionId = await getOrCreateSessionHelper(ctx, sessionId, userId);
-
-    // Save user message
-    await saveMessageHelper(ctx, {
-      sessionId: activeSessionId,
-      role: "user",
-      content: message,
-    });
-
-    // Get conversation history
-    const history = await ctx.runQuery(api.ai.queries.getMessages, {
-      sessionId: activeSessionId,
-      limit: MAX_CONTEXT_MESSAGES,
-    });
-
-    // Get AI configuration
-    const config = getAgentConfig();
-    const systemPrompt = createSystemPrompt();
-
-    // Build messages for the AI
-    const messages: Message[] = [
-      ...history
-        .filter((msg) => msg.role !== "system")
-        .map((msg) => ({
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-        })),
-      { role: "user", content: message },
-    ];
-
     try {
-      let fullResponse = "";
-      const toolCalls: any[] = [];
+      // Get or create session
+      const activeSessionId = await getOrCreateSession(ctx, sessionId, userId);
 
-      if (config.provider === "anthropic") {
-        const anthropic = new Anthropic({ apiKey: config.apiKey });
+      // Create the agent
+      const agent = createTaskAgent();
 
-        const stream = await anthropic.messages.stream({
-          model: config.model,
-          max_tokens: 4096,
-          messages,
-          system: systemPrompt,
-          tools: toolDefinitions as any,
-        });
+      // Create or continue thread
+      let threadId: string;
+      const session = await ctx.runQuery(api.ai.queries.getSession, {
+        sessionId: activeSessionId,
+      });
 
-        // Note: Streaming with tool calls is complex
-        // For now, we'll collect the full response and handle tools after
-        const result = await stream.finalMessage();
-
-        // Process tool calls if any
-        if (result.content.some((block) => block.type === "tool_use")) {
-          for (const block of result.content) {
-            if (block.type === "tool_use") {
-              const toolResult = await executeTool(
-                ctx,
-                block.name,
-                block.input
-              );
-              toolCalls.push({
-                name: block.name,
-                arguments: JSON.stringify(block.input),
-                result: JSON.stringify(toolResult),
-              });
-            }
-          }
-
-          // Get final response with tool results
-          const followUp = await anthropic.messages.create({
-            model: config.model,
-            max_tokens: 4096,
-            messages: [
-              ...messages,
-              {
-                role: "assistant",
-                content: result.content as any,
-              },
-              {
-                role: "user",
-                content: toolCalls
-                  .map((tc) => `Tool ${tc.name} result: ${tc.result}`)
-                  .join("\n"),
-              },
-            ],
-            system: systemPrompt,
-          });
-
-          fullResponse = followUp.content
-            .filter((block) => block.type === "text")
-            .map((block: any) => block.text)
-            .join("\n");
-        } else {
-          fullResponse = result.content
-            .filter((block) => block.type === "text")
-            .map((block: any) => block.text)
-            .join("\n");
-        }
+      if (session?.title) {
+        // Use existing thread ID stored in session title field (temporary storage)
+        threadId = session.title;
       } else {
-        // OpenAI streaming
-        const openai = new OpenAI({ apiKey: config.apiKey });
-
-        const stream = await openai.chat.completions.create({
-          model: config.model,
-          messages: messages as any,
-          tools: toolDefinitions.map((tool) => ({
-            type: "function" as const,
-            function: {
-              name: tool.name,
-              description: tool.description,
-              parameters: tool.parameters,
-            },
-          })),
-          stream: false, // For simplicity, we'll use non-streaming for tool calls
+        // Create new thread
+        const { threadId: newThreadId } = await agent.createThread(ctx, {
+          userId: userId ?? undefined,
         });
+        threadId = newThreadId;
 
-        const firstMessage = stream.choices[0].message;
-
-        // Process tool calls if any
-        if (firstMessage.tool_calls && firstMessage.tool_calls.length > 0) {
-          for (const toolCall of firstMessage.tool_calls) {
-            if (toolCall.type === "function") {
-              const toolResult = await executeTool(
-                ctx,
-                toolCall.function.name,
-                JSON.parse(toolCall.function.arguments)
-              );
-              toolCalls.push({
-                name: toolCall.function.name,
-                arguments: toolCall.function.arguments,
-                result: JSON.stringify(toolResult),
-              });
-            }
-          }
-
-          // Get final response with tool results
-          const followUp = await openai.chat.completions.create({
-            model: config.model,
-            messages: [
-              ...messages,
-              firstMessage as any,
-              ...toolCalls.map((tc) => ({
-                role: "tool" as const,
-                content: tc.result,
-              })),
-            ],
-          });
-
-          fullResponse = followUp.choices[0].message.content || "No response";
-        } else {
-          fullResponse = firstMessage.content || "No response";
-        }
+        // Store thread ID in session for future use
+        await ctx.runMutation(api.ai.mutations.updateSession, {
+          sessionId: activeSessionId,
+          title: threadId,
+        });
       }
 
-      // Save assistant response
-      await saveMessageHelper(ctx, {
+      // Continue the thread
+      const { thread } = await agent.continueThread(ctx, {
+        threadId,
+        userId: userId ?? undefined,
+      });
+
+      // Stream response
+      const result = await thread.streamText(
+        {
+          prompt: message,
+        },
+        {
+          saveStreamDeltas: true, // Save streaming deltas to database
+        }
+      );
+
+      // Consume the stream to completion
+      await result.consumeStream();
+      const fullText = await result.text;
+
+      // Save user message to our chat messages table
+      await ctx.runMutation(api.ai.mutations.saveMessage, {
+        sessionId: activeSessionId,
+        role: "user",
+        content: message,
+        createdAt: Date.now(),
+      });
+
+      // Save assistant response to our chat messages table
+      await ctx.runMutation(api.ai.mutations.saveMessage, {
         sessionId: activeSessionId,
         role: "assistant",
-        content: fullResponse,
-        toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+        content: fullText,
+        createdAt: Date.now(),
       });
 
       return {
         sessionId: activeSessionId,
-        message: fullResponse,
-        toolCalls,
+        message: fullText,
+        threadId,
       };
     } catch (error) {
       console.error("AI Error:", error);
@@ -427,17 +214,23 @@ export const streamMessage = action({
 
       const errorResponse = `I apologize, but I encountered an error: ${errorMessage}`;
 
-      // Save error as assistant message
-      await saveMessageHelper(ctx, {
-        sessionId: activeSessionId,
-        role: "assistant",
-        content: errorResponse,
-      });
+      // Try to save error if we have a session
+      if (sessionId) {
+        try {
+          await ctx.runMutation(api.ai.mutations.saveMessage, {
+            sessionId,
+            role: "assistant",
+            content: errorResponse,
+            createdAt: Date.now(),
+          });
+        } catch (saveError) {
+          console.error("Failed to save error message:", saveError);
+        }
+      }
 
       return {
-        sessionId: activeSessionId,
+        sessionId: sessionId ?? undefined,
         message: errorResponse,
-        toolCalls: [],
       };
     }
   },

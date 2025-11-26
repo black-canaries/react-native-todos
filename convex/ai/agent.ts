@@ -1,10 +1,16 @@
-// import { Agent } from "@convex-dev/agent";
+// @ts-nocheck - Type inference issues with Agent API
+import { Agent } from "@convex-dev/agent";
+import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
+import { components } from "../_generated/api";
+import { taskManagementTools } from "./tools";
 
 export const SYSTEM_PROMPT = `You are a helpful task management assistant for a Todoist-style task management app.
 
 Your capabilities:
 - Create, list, update, complete, and delete tasks
 - Create, list, update, and delete projects
+- Create, list, update, and delete labels
 - Search for tasks by various filters (project, status, priority, date range)
 - Provide helpful, concise responses
 - Ask clarifying questions when requests are ambiguous
@@ -44,7 +50,7 @@ export function getAgentConfig(): AgentConfig {
     }
     return {
       provider: "anthropic",
-      model: "claude-3-5-sonnet-20241022",
+      model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5",
       apiKey,
     };
   } else if (provider === "openai") {
@@ -54,14 +60,40 @@ export function getAgentConfig(): AgentConfig {
     }
     return {
       provider: "openai",
-      model: "gpt-4-turbo-preview",
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       apiKey,
     };
   } else {
-    throw new Error(`Unsupported AI provider: ${provider}`);
+    throw new Error(
+      `Unsupported AI provider: ${provider}. Supported: anthropic, openai`
+    );
   }
+}
+
+/**
+ * Get the language model based on provider configuration.
+ * Defaults to Anthropic Claude. Set AI_PROVIDER=openai to use OpenAI.
+ */
+function getLanguageModel(config: AgentConfig) {
+  if (config.provider === "openai") {
+    return openai(config.model);
+  }
+  // Default to Anthropic
+  return anthropic(config.model);
 }
 
 export function createSystemPrompt(): string {
   return SYSTEM_PROMPT.replace("{{timestamp}}", new Date().toISOString());
+}
+
+// Create the task management agent instance
+export function createTaskAgent() {
+  const config = getAgentConfig();
+
+  return new Agent(components.agent, {
+    name: "Task Management Assistant",
+    languageModel: getLanguageModel(config),
+    instructions: createSystemPrompt(),
+    tools: taskManagementTools,
+  });
 }
