@@ -240,6 +240,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - ExpoSecureStore (15.0.7):
+    - ExpoModulesCore
   - ExpoUI (0.2.0-beta.7):
     - ExpoModulesCore
   - EXUpdatesInterface (2.0.0):
@@ -2180,6 +2182,7 @@ DEPENDENCIES:
   - "ExpoLinking (from `../node_modules/.pnpm/expo-linking@8.0.8_expo@54.0.23_react-native@0.81.5_@babel+core@7.28.5_@types+react@19.1.17_react@19.1.0__react@19.1.0/node_modules/expo-linking/ios`)"
   - "ExpoMeshGradient (from `../node_modules/.pnpm/expo-mesh-gradient@0.4.7_expo@54.0.23_react-native@0.81.5_@babel+core@7.28.5_@types+rea_e73ed196293ac0b54de91c825ad59c25/node_modules/expo-mesh-gradient/ios`)"
   - "ExpoModulesCore (from `../node_modules/.pnpm/expo-modules-core@3.0.25_react-native@0.81.5_@babel+core@7.28.5_@types+react@19.1.17_react@19.1.0__react@19.1.0/node_modules/expo-modules-core`)"
+  - "ExpoSecureStore (from `../node_modules/.pnpm/expo-secure-store@15.0.7_expo@54.0.23/node_modules/expo-secure-store/ios`)"
   - "ExpoUI (from `../node_modules/.pnpm/@expo+ui@0.2.0-beta.7_expo@54.0.23_react-native@0.81.5_@babel+core@7.28.5_@types+react@_83ca7c5ae0255b20f7ebbcf0f9047b1c/node_modules/@expo/ui/ios`)"
   - "EXUpdatesInterface (from `../node_modules/.pnpm/expo-updates-interface@2.0.0_expo@54.0.23/node_modules/expo-updates-interface/ios`)"
   - "FBLazyVector (from `../node_modules/.pnpm/react-native@0.81.5_@babel+core@7.28.5_@types+react@19.1.17_react@19.1.0/node_modules/react-native/Libraries/FBLazyVector`)"
@@ -2291,6 +2294,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/.pnpm/expo-mesh-gradient@0.4.7_expo@54.0.23_react-native@0.81.5_@babel+core@7.28.5_@types+rea_e73ed196293ac0b54de91c825ad59c25/node_modules/expo-mesh-gradient/ios"
   ExpoModulesCore:
     :path: "../node_modules/.pnpm/expo-modules-core@3.0.25_react-native@0.81.5_@babel+core@7.28.5_@types+react@19.1.17_react@19.1.0__react@19.1.0/node_modules/expo-modules-core"
+  ExpoSecureStore:
+    :path: "../node_modules/.pnpm/expo-secure-store@15.0.7_expo@54.0.23/node_modules/expo-secure-store/ios"
   ExpoUI:
     :path: "../node_modules/.pnpm/@expo+ui@0.2.0-beta.7_expo@54.0.23_react-native@0.81.5_@babel+core@7.28.5_@types+react@_83ca7c5ae0255b20f7ebbcf0f9047b1c/node_modules/@expo/ui/ios"
   EXUpdatesInterface:
@@ -2459,6 +2464,7 @@ SPEC CHECKSUMS:
   ExpoLinking: f5c171877e118e792cb9a77e5ade0b080d899b14
   ExpoMeshGradient: 763087d3b1e6e9a0974e9700ea24cb598816d93c
   ExpoModulesCore: 4daa3e24768f152a3b3d84259150fedb5013f561
+  ExpoSecureStore: f44dee1354536bdb3d7fab8cc451ee737c41beca
   ExpoUI: 821b058da921ea4aa6172b36d080991ea6fb2fae
   EXUpdatesInterface: 1436757deb0d574b84bba063bd024c315e0ec08b
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12

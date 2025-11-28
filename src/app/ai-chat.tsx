@@ -46,7 +46,9 @@ export default function AIScreen() {
   }, [convexMessages]);
 
   const handleClose = useCallback(() => {
-    router.back();
+    // Navigate to Today tab instead of back() to avoid reopening the modal
+    // (the AI tab placeholder auto-redirects here, causing a loop if we go back to it)
+    router.replace('/(tabs)/today');
   }, [router]);
 
   const handleSendMessage = useCallback(async () => {

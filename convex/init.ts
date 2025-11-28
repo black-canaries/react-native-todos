@@ -22,41 +22,72 @@ export const init = internalMutation({
     try {
       console.log("Seeding database with initial data...");
 
+      // Create or get demo user
+      const DEMO_EMAIL = "hello@iamjonathan.me";
+      let demoUser = await ctx.db
+        .query("users")
+        .withIndex("email", (q) => q.eq("email", DEMO_EMAIL))
+        .first();
+
+      if (!demoUser) {
+        console.log(`Creating demo user: ${DEMO_EMAIL}`);
+        const demoUserId = await ctx.db.insert("users", {
+          email: DEMO_EMAIL,
+          onboardingCompleted: true,
+        });
+        demoUser = await ctx.db.get(demoUserId);
+        console.log(`✓ Demo user created with ID: ${demoUserId}`);
+      } else {
+        console.log(`✓ Demo user already exists: ${demoUser._id}`);
+      }
+
+      if (!demoUser) {
+        throw new Error("Failed to create demo user");
+      }
+
+      const userId = demoUser._id;
+
       // Create labels
       const labels = await Promise.all([
         ctx.db.insert("labels", {
           name: "Work",
           color: "#4073ff",
+          userId,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }),
         ctx.db.insert("labels", {
           name: "Personal",
           color: "#25b84c",
+          userId,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }),
         ctx.db.insert("labels", {
           name: "Urgent",
           color: "#de4c4a",
+          userId,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }),
         ctx.db.insert("labels", {
           name: "Waiting",
           color: "#ffa900",
+          userId,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }),
         ctx.db.insert("labels", {
           name: "Home",
           color: "#884dff",
+          userId,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }),
         ctx.db.insert("labels", {
           name: "Shopping",
           color: "#ff40a6",
+          userId,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }),
@@ -68,6 +99,7 @@ export const init = internalMutation({
           name: "Inbox",
           color: "#4073ff",
           isFavorite: true,
+          userId,
           order: 0,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -76,6 +108,7 @@ export const init = internalMutation({
           name: "Work Projects",
           color: "#de4c4a",
           isFavorite: true,
+          userId,
           order: 1,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -84,6 +117,7 @@ export const init = internalMutation({
           name: "Personal Goals",
           color: "#25b84c",
           isFavorite: true,
+          userId,
           order: 2,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -92,6 +126,7 @@ export const init = internalMutation({
           name: "Shopping List",
           color: "#ffa900",
           isFavorite: false,
+          userId,
           order: 3,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -100,6 +135,7 @@ export const init = internalMutation({
           name: "Home Improvement",
           color: "#884dff",
           isFavorite: false,
+          userId,
           order: 4,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -108,6 +144,7 @@ export const init = internalMutation({
           name: "Learning & Development",
           color: "#ff8d00",
           isFavorite: false,
+          userId,
           order: 5,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -128,6 +165,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p1",
           projectId: projects[0],
+          userId,
           dueDate: today,
           labels: [labels[0], labels[2]],
           order: 0,
@@ -139,6 +177,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p2",
           projectId: projects[0],
+          userId,
           dueDate: today,
           labels: [labels[1]],
           order: 1,
@@ -150,6 +189,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p2",
           projectId: projects[0],
+          userId,
           dueDate: tomorrow,
           labels: [labels[1], labels[5]],
           order: 2,
@@ -164,6 +204,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p1",
           projectId: projects[1],
+          userId,
           dueDate: tomorrow,
           labels: [labels[0]],
           order: 0,
@@ -175,6 +216,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p3",
           projectId: projects[1],
+          userId,
           dueDate: nextWeek,
           labels: [labels[0]],
           order: 1,
@@ -186,6 +228,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p2",
           projectId: projects[1],
+          userId,
           dueDate: today,
           labels: [labels[0]],
           order: 2,
@@ -197,6 +240,7 @@ export const init = internalMutation({
           status: "completed",
           priority: "p1",
           projectId: projects[1],
+          userId,
           labels: [labels[0]],
           order: 3,
           createdAt: yesterday,
@@ -210,6 +254,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p2",
           projectId: projects[2],
+          userId,
           labels: [labels[1]],
           order: 0,
           createdAt: today,
@@ -220,6 +265,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p3",
           projectId: projects[2],
+          userId,
           labels: [labels[1]],
           order: 1,
           createdAt: yesterday,
@@ -231,6 +277,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p2",
           projectId: projects[2],
+          userId,
           dueDate: nextWeek,
           labels: [labels[1]],
           order: 2,
@@ -244,6 +291,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p4",
           projectId: projects[3],
+          userId,
           labels: [labels[5]],
           order: 0,
           createdAt: today,
@@ -254,6 +302,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p4",
           projectId: projects[3],
+          userId,
           labels: [labels[5]],
           order: 1,
           createdAt: today,
@@ -264,6 +313,7 @@ export const init = internalMutation({
           status: "completed",
           priority: "p4",
           projectId: projects[3],
+          userId,
           labels: [labels[5]],
           order: 2,
           createdAt: today,
@@ -274,6 +324,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p4",
           projectId: projects[3],
+          userId,
           labels: [labels[5]],
           order: 3,
           createdAt: today,
@@ -286,6 +337,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p1",
           projectId: projects[4],
+          userId,
           dueDate: tomorrow,
           labels: [labels[4]],
           order: 0,
@@ -297,6 +349,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p3",
           projectId: projects[4],
+          userId,
           labels: [labels[4]],
           order: 1,
           createdAt: yesterday,
@@ -309,6 +362,7 @@ export const init = internalMutation({
           status: "active",
           priority: "p2",
           projectId: projects[5],
+          userId,
           dueDate: nextWeek,
           labels: [labels[1]],
           order: 0,
@@ -320,6 +374,7 @@ export const init = internalMutation({
           status: "completed",
           priority: "p3",
           projectId: projects[5],
+          userId,
           labels: [labels[1]],
           order: 1,
           createdAt: yesterday,
@@ -327,8 +382,13 @@ export const init = internalMutation({
         }),
       ]);
 
-      console.log("✓ Database seeded successfully with 6 projects, 18+ tasks, and 6 labels");
-      return { success: true, message: "Database seeded successfully" };
+      console.log("✓ Database seeded successfully with demo user, 6 projects, 18+ tasks, and 6 labels");
+      console.log(`✓ Demo user can log in via OTP to: ${DEMO_EMAIL}`);
+      return {
+        success: true,
+        message: "Database seeded successfully",
+        demoEmail: DEMO_EMAIL,
+      };
     } catch (error) {
       console.error("✗ Error seeding database:", error);
       return { success: false, message: `Error seeding database: ${error}` };

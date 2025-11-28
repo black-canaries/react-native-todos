@@ -1,31 +1,39 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const getSession = query({
   args: {
     sessionId: v.id("chatSessions"),
   },
   handler: async (ctx, { sessionId }) => {
-    return await ctx.db.get(sessionId);
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    const session = await ctx.db.get(sessionId);
+    if (!session || session.userId !== userId) {
+      return null;
+    }
+
+    return session;
   },
 });
 
 export const listSessions = query({
   args: {
-    userId: v.optional(v.string()),
     limit: v.optional(v.number()),
   },
-  handler: async (ctx, { userId, limit = 50 }) => {
-    if (userId) {
-      return await ctx.db
-        .query("chatSessions")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .order("desc")
-        .take(limit);
+  handler: async (ctx, { limit = 50 }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
     }
 
     return await ctx.db
       .query("chatSessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .take(limit);
   },
@@ -37,6 +45,17 @@ export const getMessages = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { sessionId, limit = 50 }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    // Verify session ownership
+    const session = await ctx.db.get(sessionId);
+    if (!session || session.userId !== userId) {
+      return [];
+    }
+
     const messages = await ctx.db
       .query("chatMessages")
       .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
@@ -53,20 +72,15 @@ export const getMessages = query({
 });
 
 export const getLatestSession = query({
-  args: {
-    userId: v.optional(v.string()),
-  },
-  handler: async (ctx, { userId }) => {
-    if (userId) {
-      return await ctx.db
-        .query("chatSessions")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .order("desc")
-        .first();
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
     }
 
     return await ctx.db
       .query("chatSessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .first();
   },

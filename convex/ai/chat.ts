@@ -10,8 +10,7 @@ const MAX_CONTEXT_MESSAGES = 20;
 // Helper to get or create a session
 async function getOrCreateSession(
   ctx: any,
-  sessionId: Id<"chatSessions"> | undefined,
-  userId: string | undefined
+  sessionId: Id<"chatSessions"> | undefined
 ): Promise<Id<"chatSessions">> {
   if (sessionId) {
     const session = await ctx.runQuery(api.ai.queries.getSession, {
@@ -22,10 +21,9 @@ async function getOrCreateSession(
     }
   }
 
-  // Create new session
+  // Create new session (userId will be set from auth context)
   const now = Date.now();
   return await ctx.runMutation(api.ai.mutations.createSession, {
-    userId,
     createdAt: now,
     updatedAt: now,
   });
@@ -41,7 +39,7 @@ export const sendMessage = action({
   handler: async (ctx, { sessionId, message, userId }) => {
     try {
       // Get or create session
-      const activeSessionId = await getOrCreateSession(ctx, sessionId, userId);
+      const activeSessionId = await getOrCreateSession(ctx, sessionId);
 
       // Create the agent
       const agent = createTaskAgent();
@@ -138,7 +136,7 @@ export const streamMessage = action({
   handler: async (ctx, { sessionId, message, userId }) => {
     try {
       // Get or create session
-      const activeSessionId = await getOrCreateSession(ctx, sessionId, userId);
+      const activeSessionId = await getOrCreateSession(ctx, sessionId);
 
       // Create the agent
       const agent = createTaskAgent();

@@ -29,7 +29,7 @@ A feature-rich clone of the Todoist mobile app built with React Native and Expo,
 
 ### Coming Soon 🚀
 
-See [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md) for the complete feature roadmap including:
+See [Product Roadmap](./docs/PRODUCT_ROADMAP.md) for the complete feature roadmap including:
 - Board/Kanban view
 - Calendar view
 - Custom filters
@@ -37,6 +37,18 @@ See [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md) for the complete feature roadmap 
 - Productivity tracking (Karma system)
 - Templates
 - And much more!
+
+## Documentation
+
+Comprehensive documentation is available in the [`docs/`](./docs) folder:
+
+| Document | Description |
+|----------|-------------|
+| [Product Roadmap](./docs/PRODUCT_ROADMAP.md) | Feature roadmap with phases and priorities |
+| [Convex Setup Guide](./docs/CONVEX_SETUP.md) | Initial Convex backend setup and configuration |
+| [Convex Migration Guide](./docs/CONVEX_MIGRATION.md) | Migrating from mock data to Convex queries |
+| [Convex Seeding Guide](./docs/CONVEX_SEEDING.md) | Database seeding for development and testing |
+| [AI Backend Implementation](./docs/AI_BACKEND_IMPLEMENTATION.md) | AI chat assistant integration with Convex |
 
 ## Tech Stack
 
@@ -90,23 +102,25 @@ react-native-todos/
 │   │   ├── upcoming.tsx     # Upcoming screen
 │   │   └── projects.tsx     # Projects screen
 │   └── _layout.tsx          # Root layout
+├── convex/                   # Convex backend
+│   ├── schema.ts            # Database schema
+│   ├── ai/                  # AI chat backend
+│   ├── queries/             # Database queries
+│   └── mutations/           # Database mutations
+├── docs/                     # Project documentation
+│   ├── PRODUCT_ROADMAP.md   # Feature roadmap
+│   ├── CONVEX_SETUP.md      # Backend setup guide
+│   ├── CONVEX_MIGRATION.md  # Migration guide
+│   ├── CONVEX_SEEDING.md    # Database seeding
+│   └── AI_BACKEND_IMPLEMENTATION.md
 ├── src/
 │   ├── components/          # Reusable UI components
-│   │   ├── TaskItem.tsx     # Task list item component
-│   │   └── ProjectItem.tsx  # Project list item component
+│   ├── hooks/               # Custom React hooks
 │   ├── data/                # Mock data
-│   │   └── mockData.ts      # All mock data
 │   ├── theme/               # Theme configuration
-│   │   ├── colors.ts        # Color definitions
-│   │   ├── spacing.ts       # Spacing/sizing
-│   │   ├── typography.ts    # Typography styles
-│   │   └── index.ts         # Theme exports
 │   ├── types/               # TypeScript types
-│   │   └── index.ts         # Type definitions
 │   └── utils/               # Utility functions
-│       └── dateUtils.ts     # Date formatting utilities
 ├── assets/                  # Images and static assets
-├── PRODUCT_ROADMAP.md       # Feature roadmap
 └── package.json
 \`\`\`
 
@@ -204,7 +218,7 @@ This is a demonstration project. Feel free to fork and customize for your needs!
 
 ## Roadmap
 
-See [PRODUCT_ROADMAP.md](./PRODUCT_ROADMAP.md) for the complete feature roadmap.
+See [Product Roadmap](./docs/PRODUCT_ROADMAP.md) for the complete feature roadmap.
 
 ## License
 

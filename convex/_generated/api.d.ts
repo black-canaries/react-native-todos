@@ -13,6 +13,8 @@ import type * as ai_chat from "../ai/chat.js";
 import type * as ai_mutations from "../ai/mutations.js";
 import type * as ai_queries from "../ai/queries.js";
 import type * as ai_tools from "../ai/tools.js";
+import type * as auth from "../auth.js";
+import type * as http from "../http.js";
 import type * as init from "../init.js";
 import type * as labelsMutation from "../labelsMutation.js";
 import type * as labelsQuery from "../labelsQuery.js";
@@ -20,6 +22,7 @@ import type * as projectsMutation from "../projectsMutation.js";
 import type * as projectsQuery from "../projectsQuery.js";
 import type * as tasksMutation from "../tasksMutation.js";
 import type * as tasksQuery from "../tasksQuery.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -33,6 +36,8 @@ declare const fullApi: ApiFromModules<{
   "ai/mutations": typeof ai_mutations;
   "ai/queries": typeof ai_queries;
   "ai/tools": typeof ai_tools;
+  auth: typeof auth;
+  http: typeof http;
   init: typeof init;
   labelsMutation: typeof labelsMutation;
   labelsQuery: typeof labelsQuery;
@@ -40,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   projectsQuery: typeof projectsQuery;
   tasksMutation: typeof tasksMutation;
   tasksQuery: typeof tasksQuery;
+  users: typeof users;
 }>;
 
 /**

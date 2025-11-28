@@ -1,5 +1,6 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const create = mutation({
   args: {
@@ -8,8 +9,14 @@ export const create = mutation({
     isFavorite: v.boolean(),
   },
   handler: async (ctx, { name, color, isFavorite }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     const lastProject = await ctx.db
       .query("projects")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .first();
 
@@ -19,6 +26,7 @@ export const create = mutation({
       name,
       color,
       isFavorite,
+      userId,
       order,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -34,8 +42,14 @@ export const update = mutation({
     isFavorite: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, name, color, isFavorite }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     const project = await ctx.db.get(id);
     if (!project) throw new Error("Project not found");
+    if (project.userId !== userId) throw new Error("Access denied");
 
     await ctx.db.patch(id, {
       ...(name !== undefined && { name }),
@@ -51,13 +65,21 @@ export const update = mutation({
 export const delete_ = mutation({
   args: { id: v.id("projects") },
   handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     const project = await ctx.db.get(id);
     if (!project) throw new Error("Project not found");
+    if (project.userId !== userId) throw new Error("Access denied");
 
     // Delete all tasks in this project
     const tasks = await ctx.db
       .query("tasks")
-      .filter((q) => q.eq(q.field("projectId"), id))
+      .withIndex("by_user_and_project", (q) =>
+        q.eq("userId", userId).eq("projectId", id)
+      )
       .collect();
 
     for (const task of tasks) {
@@ -74,8 +96,14 @@ export const reorder = mutation({
     newOrder: v.number(),
   },
   handler: async (ctx, { id, newOrder }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     const project = await ctx.db.get(id);
     if (!project) throw new Error("Project not found");
+    if (project.userId !== userId) throw new Error("Access denied");
 
     await ctx.db.patch(id, {
       order: newOrder,
@@ -92,8 +120,14 @@ export const updateDisplaySettings = mutation({
     showCompletedTasks: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, showCompletedTasks }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
     const project = await ctx.db.get(id);
     if (!project) throw new Error("Project not found");
+    if (project.userId !== userId) throw new Error("Access denied");
 
     await ctx.db.patch(id, {
       ...(showCompletedTasks !== undefined && { showCompletedTasks }),
